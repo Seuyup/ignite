@@ -12,8 +12,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "WGNB",
-    template: "%s — WGNB",
+    default: "ignite",
+    template: "%s — ignite",
   },
   description:
     "WE MAY SEE THE SAME THING but WE THINK DIFFERENTLY — architecture and spatial design studio framework.",

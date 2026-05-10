@@ -4,7 +4,7 @@ export type Project = {
   slug: string;
 };
 
-/** Placeholder entries aligned with wgnb.kr homepage structure */
+/** Placeholder entries aligned with a reference homepage structure */
 export const featuredProjects: Project[] = [
   { title: "MEGA PHACTORY", slug: "mega-phactory" },
   { title: "OLIVE BETTER", subtitle: "Gwanghwamun", slug: "olive-better" },

@@ -9,7 +9,7 @@ export function SiteHeader() {
           href="/"
           className="text-xl font-medium tracking-tight text-neutral-900 transition-opacity hover:opacity-70"
         >
-          WGNB
+          ignite
         </Link>
         <nav aria-label="Primary">
           <ul className="flex flex-col gap-2 text-sm uppercase tracking-[0.12em] text-neutral-600 md:flex-row md:flex-wrap md:justify-end md:gap-x-6 md:gap-y-2">

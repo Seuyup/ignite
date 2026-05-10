@@ -5,7 +5,7 @@ export const mainNav: NavItem[] = [
   { label: "space", href: "/space" },
   { label: "architecture", href: "/architecture" },
   { label: "product", href: "/products" },
-  { label: "WGNB", href: "/wgnb" },
+  { label: "ignite", href: "/ignite" },
   { label: "people", href: "/people" },
   { label: "contact", href: "/contact" },
   {
