@@ -23,3 +23,8 @@ body {
     text-wrap: balance;
   }
 }
+
+/* Tiptap / ProseMirror (관리자 편집기) */
+.ProseMirror:focus {
+  outline: none;
+}

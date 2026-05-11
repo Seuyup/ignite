@@ -1,7 +1,11 @@
 import { ProjectShowcase } from "@/components/ProjectShowcase";
-import { featuredProjects } from "@/lib/projects";
+import { getProjectsForPublic } from "@/lib/project-queries";
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const projects = await getProjectsForPublic();
+
   return (
     <>
       <section className="border-b border-neutral-200 bg-neutral-50">
@@ -13,7 +17,7 @@ export default function HomePage() {
           </p>
         </div>
       </section>
-      <ProjectShowcase projects={featuredProjects} />
+      <ProjectShowcase projects={projects} />
     </>
   );
 }

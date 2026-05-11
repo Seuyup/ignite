@@ -2,6 +2,8 @@ export type Project = {
   title: string;
   subtitle?: string;
   slug: string;
+  /** 대표 이미지(선택) */
+  coverImageUrl?: string;
 };
 
 /** Placeholder entries aligned with a reference homepage structure */

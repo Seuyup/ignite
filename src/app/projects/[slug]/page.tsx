@@ -1,17 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { featuredProjects } from "@/lib/projects";
+import {
+  getProjectBySlug,
+  getProjectSlugsForStaticParams,
+} from "@/lib/project-queries";
+import { sanitizeRichHtml } from "@/lib/sanitize-html";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export function generateStaticParams() {
-  return featuredProjects.map((p) => ({ slug: p.slug }));
+export const dynamic = "force-dynamic";
+
+export async function generateStaticParams() {
+  const slugs = await getProjectSlugsForStaticParams();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const project = featuredProjects.find((p) => p.slug === slug);
+  const project = await getProjectBySlug(slug);
   if (!project) return { title: "Project" };
   const title = project.subtitle
     ? `${project.title} — ${project.subtitle}`
@@ -21,8 +28,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProjectDetailPage({ params }: Props) {
   const { slug } = await params;
-  const project = featuredProjects.find((p) => p.slug === slug);
+  const project = await getProjectBySlug(slug);
   if (!project) notFound();
+
+  const rawHtml = project.contentHtml ?? "";
+  const safeHtml = sanitizeRichHtml(rawHtml);
+  const textOnly = safeHtml.replace(/<[^>]*>/g, "").trim();
+  const hasRichBody = textOnly.length > 0 || /<img\b/i.test(safeHtml);
+  const cover = project.coverImageUrl?.trim();
 
   return (
     <article className="mx-auto max-w-6xl px-6 py-16 md:py-24">
@@ -32,7 +45,21 @@ export default async function ProjectDetailPage({ params }: Props) {
       >
         ← project
       </Link>
-      <header className="mt-8 border-b border-neutral-200 pb-12">
+
+      {cover ? (
+        <div className="relative mt-8 overflow-hidden rounded-2xl bg-neutral-100">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={cover}
+            alt=""
+            className="aspect-[21/10] max-h-[min(70vh,520px)] w-full object-cover md:aspect-[2.5/1]"
+          />
+        </div>
+      ) : null}
+
+      <header
+        className={`border-b border-neutral-200 pb-12 ${cover ? "mt-10" : "mt-8"}`}
+      >
         <h1 className="text-3xl font-medium tracking-tight text-neutral-900 md:text-4xl">
           {project.title}
         </h1>
@@ -42,10 +69,23 @@ export default async function ProjectDetailPage({ params }: Props) {
           </p>
         ) : null}
       </header>
-      <div className="mt-12 aspect-[16/10] w-full bg-neutral-100" aria-hidden />
-      <p className="mt-8 max-w-2xl text-sm leading-relaxed text-neutral-600 md:text-base">
-        프로젝트 상세 영역입니다. 이미지, 텍스트, 크레딧 등을 여기에 구성하면 됩니다.
-      </p>
+      {hasRichBody ? (
+        <div
+          className="prose prose-neutral mt-12 max-w-3xl prose-headings:font-medium prose-headings:tracking-tight prose-p:text-neutral-600 prose-a:text-neutral-900 prose-img:rounded prose-img:border prose-img:border-neutral-200"
+          dangerouslySetInnerHTML={{ __html: safeHtml }}
+        />
+      ) : cover ? (
+        <p className="mt-10 max-w-2xl text-sm leading-relaxed text-neutral-600 md:text-base">
+          본문은 관리자에서 추가할 수 있습니다.
+        </p>
+      ) : (
+        <>
+          <div className="mt-12 aspect-[16/10] w-full bg-neutral-100" aria-hidden />
+          <p className="mt-8 max-w-2xl text-sm leading-relaxed text-neutral-600 md:text-base">
+            프로젝트 상세 영역입니다. 관리자에서 본문을 추가하면 여기에 표시됩니다.
+          </p>
+        </>
+      )}
     </article>
   );
 }
