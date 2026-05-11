@@ -1,8 +1,8 @@
 # EC2(Amazon Linux) + PM2 배포 예시
 # 필수 Secrets: EC2_HOST, EC2_USER, EC2_SSH_KEY
 #
-# 서버에 앱 경로 ~/ignite, PM2 앱 이름 ignite, main 브랜치 가정.
-# 다르면 아래 env 와 remote_script 를 수정하세요.
+# 서버에 반드시 git clone 된 디렉터리 필요 (예: /home/ec2-user/ignite)
+# PM2 앱 이름 ignite, main 브랜치 가정. 경로/브랜치는 env 에 맞게 수정.
 
 name: Deploy to EC2
 
@@ -19,7 +19,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      DEPLOY_PATH: ~/ignite
+      # Amazon Linux ec2-user 홈 기준 (물결표 ~ 는 원격에서 안 열릴 수 있어 절대 경로 권장)
+      DEPLOY_PATH: /home/ec2-user/ignite
       PM2_APP_NAME: ignite
 
     steps:
@@ -40,7 +41,18 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
-            cd ${{ env.DEPLOY_PATH }}
+            DEPLOY_DIR="${{ env.DEPLOY_PATH }}"
+            if [ ! -d "$DEPLOY_DIR" ]; then
+              echo "::error::폴더가 없습니다: $DEPLOY_DIR — EC2에서 mkdir 후 git clone 하세요."
+              exit 1
+            fi
+            cd "$DEPLOY_DIR"
+            if [ ! -d .git ]; then
+              echo "::error::Git 저장소가 아닙니다: $DEPLOY_DIR"
+              echo "해결: ssh 접속 후 예) cd ~ && git clone https://github.com/<계정>/<저장소>.git ignite"
+              echo "(이미 파일만 넣어둔 폴더면 이름 바꾼 뒤 빈 디렉터리에 clone 하거나, 해당 경로를 삭제 후 clone)"
+              exit 1
+            fi
             git config --global --add safe.directory "$(pwd)" || true
             git fetch origin main
             git checkout main
