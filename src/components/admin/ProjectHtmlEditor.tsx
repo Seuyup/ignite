@@ -1,10 +1,14 @@
 "use client";
 
+import { AdminImageUploadOverlay } from "@/components/admin/AdminImageUploadOverlay";
 import {
   ADMIN_UPLOAD_MAX_BYTES,
   ADMIN_UPLOAD_MAX_LABEL,
-  parseAdminUploadResponse,
 } from "@/lib/admin-upload";
+import {
+  postAdminImageUpload,
+  type AdminUploadProgress,
+} from "@/lib/admin-upload-xhr";
 import ImageExtension from "@tiptap/extension-image";
 import LinkExtension from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -37,6 +41,11 @@ export function ProjectHtmlEditor({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [sourceMode, setSourceMode] = useState(false);
   const [htmlBuffer, setHtmlBuffer] = useState(initialHtml);
+  const [uploadProgress, setUploadProgress] = useState<AdminUploadProgress | null>(
+    null,
+  );
+
+  const imageUploadBusy = uploadProgress !== null;
 
   const editor = useEditor({
     extensions: [
@@ -113,28 +122,22 @@ export function ProjectHtmlEditor({
       return;
     }
 
-    const fd = new FormData();
-    fd.append("file", file);
-
+    setUploadProgress({ phase: "uploading", loaded: 0, total: file.size });
     try {
-      const res = await fetch("/api/admin/upload", {
-        method: "POST",
-        body: fd,
-      });
-      const data = await parseAdminUploadResponse(res);
-      if (!res.ok) {
-        window.alert(data.error ?? "이미지 업로드에 실패했습니다.");
+      const result = await postAdminImageUpload(file, setUploadProgress);
+      if (!result.ok) {
+        window.alert(result.error ?? "이미지 업로드에 실패했습니다.");
         return;
       }
-      if (data.url) {
-        editor.chain().focus().setImage({ src: data.url }).run();
-      }
+      editor.chain().focus().setImage({ src: result.url }).run();
     } catch (e) {
       const msg =
         e instanceof Error
           ? `이미지 업로드 중 오류: ${e.message}`
           : "이미지 업로드 중 알 수 없는 오류가 발생했습니다.";
       window.alert(msg);
+    } finally {
+      setUploadProgress(null);
     }
   };
 
@@ -147,12 +150,13 @@ export function ProjectHtmlEditor({
   })();
 
   return (
-    <div className="overflow-hidden rounded-lg border border-neutral-600 bg-neutral-900 shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-neutral-600 bg-neutral-900 shadow-sm">
+      <AdminImageUploadOverlay progress={uploadProgress} />
       <div className="flex flex-wrap items-center gap-1 border-b border-neutral-700 bg-neutral-800 px-2 py-2">
         <button
           type="button"
           onClick={toggleSourceMode}
-          className={`rounded px-2 py-1.5 text-xs font-medium ${
+          className={`rounded-md px-2 py-1.5 text-xs font-medium ${
             sourceMode
               ? "bg-amber-500 text-neutral-900"
               : "bg-neutral-700 text-neutral-100 hover:bg-neutral-600"
@@ -174,7 +178,7 @@ export function ProjectHtmlEditor({
                 if (v === "h2") chain.toggleHeading({ level: 2 }).run();
                 if (v === "h3") chain.toggleHeading({ level: 3 }).run();
               }}
-              className="rounded border-0 bg-neutral-700 py-1.5 pl-2 pr-6 text-xs text-neutral-100"
+              className="rounded-md border-0 bg-neutral-700 py-1.5 pl-2 pr-6 text-xs text-neutral-100"
               aria-label="제목 단계"
             >
               <option value="p">본문</option>
@@ -286,8 +290,11 @@ export function ProjectHtmlEditor({
             >
               링크
             </ToolBtn>
-            <ToolBtn onClick={() => fileInputRef.current?.click()}>
-              이미지
+            <ToolBtn
+              onClick={() => fileInputRef.current?.click()}
+              disabled={imageUploadBusy}
+            >
+              {imageUploadBusy ? "처리 중…" : "이미지"}
             </ToolBtn>
             <input
               ref={fileInputRef}
@@ -310,11 +317,11 @@ export function ProjectHtmlEditor({
           value={htmlBuffer}
           onChange={(e) => setHtmlBuffer(e.target.value)}
           spellCheck={false}
-          className="min-h-[320px] w-full resize-y bg-neutral-950 px-4 py-3 font-mono text-xs leading-relaxed text-emerald-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-amber-500/40"
+          className="min-h-[320px] w-full resize-y rounded-b-xl bg-neutral-950 px-4 py-3 font-mono text-xs leading-relaxed text-emerald-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-amber-500/40"
           aria-label="HTML 소스"
         />
       ) : (
-        <div className="bg-neutral-900">
+        <div className="rounded-b-xl bg-neutral-900">
           <EditorContent editor={editor} />
         </div>
       )}
@@ -327,21 +334,26 @@ function ToolBtn({
   title,
   active,
   onClick,
+  disabled,
 }: {
   children: ReactNode;
   title?: string;
   active?: boolean;
   onClick: () => void;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       title={title}
+      disabled={disabled}
       onClick={onClick}
-      className={`min-w-[1.75rem] rounded px-2 py-1.5 text-xs font-medium ${
-        active
-          ? "bg-neutral-200 text-neutral-900"
-          : "bg-neutral-700 text-neutral-100 hover:bg-neutral-600"
+      className={`min-w-[1.75rem] rounded-md px-2 py-1.5 text-xs font-medium ${
+        disabled
+          ? "cursor-not-allowed opacity-40"
+          : active
+            ? "bg-neutral-200 text-neutral-900"
+            : "bg-neutral-700 text-neutral-100 hover:bg-neutral-600"
       }`}
     >
       {children}

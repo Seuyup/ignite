@@ -3,6 +3,8 @@ import { featuredProjects } from "@/lib/projects";
 import { connectDB } from "@/lib/mongodb";
 import { Project as ProjectModel } from "@/lib/models/Project";
 
+const ACTIVE = { deletedAt: null } as const;
+
 export type ProjectDetail = Project & {
   contentHtml?: string;
 };
@@ -38,7 +40,9 @@ function mapDocDetail(p: {
 export async function getProjectsForPublic(): Promise<Project[]> {
   try {
     await connectDB();
-    const docs = await ProjectModel.find().sort({ createdAt: -1 }).lean();
+    const docs = await ProjectModel.find(ACTIVE)
+      .sort({ sortOrder: 1, createdAt: -1 })
+      .lean();
     if (docs.length > 0) {
       return docs.map((d) =>
         mapDoc({
@@ -58,7 +62,7 @@ export async function getProjectsForPublic(): Promise<Project[]> {
 export async function getProjectBySlug(slug: string): Promise<ProjectDetail | null> {
   try {
     await connectDB();
-    const doc = await ProjectModel.findOne({ slug }).lean();
+    const doc = await ProjectModel.findOne({ slug, ...ACTIVE }).lean();
     if (doc) {
       return mapDocDetail({
         title: doc.title,
@@ -80,7 +84,7 @@ export async function getProjectBySlug(slug: string): Promise<ProjectDetail | nu
 export async function getProjectSlugsForStaticParams(): Promise<string[]> {
   try {
     await connectDB();
-    const docs = await ProjectModel.find().select("slug").lean();
+    const docs = await ProjectModel.find(ACTIVE).select("slug").lean();
     if (docs.length > 0) return docs.map((d) => d.slug);
   } catch {
     /* fallback */

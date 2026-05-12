@@ -15,7 +15,7 @@ export default function AdminDashboardPage() {
       </p>
 
       <ul className="mt-10 grid gap-6 sm:grid-cols-2">
-        <li className="border border-neutral-200 bg-white p-6">
+        <li className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-medium text-neutral-900">프로젝트</h2>
           <p className="mt-2 text-sm leading-relaxed text-neutral-600">
             홈과 프로젝트 상세에 노출되는 작업 목록을 추가·조회합니다. 제목,
@@ -23,12 +23,12 @@ export default function AdminDashboardPage() {
           </p>
           <Link
             href="/admin/projects/list"
-            className="mt-4 inline-block text-sm text-neutral-900 underline underline-offset-4 hover:opacity-70"
+            className="mt-4 inline-block rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm font-medium text-neutral-900 transition-colors hover:border-neutral-300 hover:bg-white"
           >
             프로젝트 목록으로 →
           </Link>
         </li>
-        <li className="border border-neutral-200 bg-white p-6">
+        <li className="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-medium text-neutral-900">연락처</h2>
           <p className="mt-2 text-sm leading-relaxed text-neutral-600">
             공개 페이지의 연락처 섹션 본문을 수정합니다. 저장 후 방문자에게
@@ -36,7 +36,7 @@ export default function AdminDashboardPage() {
           </p>
           <Link
             href="/admin/contact"
-            className="mt-4 inline-block text-sm text-neutral-900 underline underline-offset-4 hover:opacity-70"
+            className="mt-4 inline-block rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm font-medium text-neutral-900 transition-colors hover:border-neutral-300 hover:bg-white"
           >
             연락처 편집으로 →
           </Link>

@@ -62,7 +62,7 @@ export function ContactEditorForm({ initialBody }: Props) {
         <button
           type="submit"
           disabled={pending}
-          className="bg-neutral-900 px-4 py-2 text-sm text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="rounded-lg bg-neutral-900 px-4 py-2 text-sm text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {pending ? "저장 중…" : "저장"}
         </button>

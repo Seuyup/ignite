@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ADMIN_UPLOAD_MAX_BYTES } from "@/lib/admin-upload";
 import { verifyAdminToken } from "@/lib/admin-session";
+import { optimizeAdminUploadImage } from "@/lib/optimize-upload-image";
 
 function safeKeySegment(name: string): string {
   const base = name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120);
@@ -73,7 +74,22 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
-  const key = `projects/${Date.now()}-${safeKeySegment(file.name)}`;
+
+  const declaredType = (file.type || "application/octet-stream").split(";")[0]?.trim() ?? "";
+  const optimized = await optimizeAdminUploadImage(buf, declaredType);
+  let body: Buffer = buf;
+  let contentType = declaredType || "application/octet-stream";
+  let objectKey: string;
+  if (optimized) {
+    body = optimized.buffer;
+    contentType = optimized.mime;
+    const stem = safeKeySegment(
+      file.name.replace(/\.[^/.]+$/i, "") || "image",
+    );
+    objectKey = `projects/${Date.now()}-${stem}.${optimized.extension}`;
+  } else {
+    objectKey = `projects/${Date.now()}-${safeKeySegment(file.name)}`;
+  }
 
   const client = new S3Client({
     region: "auto",
@@ -88,9 +104,9 @@ export async function POST(request: Request) {
     await client.send(
       new PutObjectCommand({
         Bucket: bucket,
-        Key: key,
-        Body: buf,
-        ContentType: file.type || "application/octet-stream",
+        Key: objectKey,
+        Body: body,
+        ContentType: contentType || "application/octet-stream",
       }),
     );
   } catch (e) {
@@ -113,7 +129,7 @@ export async function POST(request: Request) {
   }
 
   const base = publicBase.replace(/\/$/, "");
-  const url = `${base}/${key}`;
+  const url = `${base}/${objectKey}`;
 
   return NextResponse.json({ url });
 }

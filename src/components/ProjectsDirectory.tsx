@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { R2Image } from "@/components/R2Image";
 import type { Project } from "@/lib/projects";
 
 type Props = { projects: Project[] };
@@ -36,11 +37,12 @@ export function ProjectsDirectory({ projects }: Props) {
             >
               <div className="relative aspect-[4/3] min-h-[200px] md:col-span-7 md:aspect-auto md:min-h-[320px] lg:min-h-[360px]">
                 {p.coverImageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- 외부 스토리지 URL
-                  <img
+                  <R2Image
                     src={p.coverImageUrl}
                     alt=""
-                    className="absolute inset-0 h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.03]"
+                    mode="fill"
+                    className="object-cover transition duration-700 ease-out group-hover:scale-[1.03]"
+                    sizes="(max-width: 768px) 100vw, 60vw"
                   />
                 ) : (
                   <div

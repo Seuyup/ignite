@@ -56,7 +56,19 @@ R2_PUBLIC_BASE_URL=https://pub-xxxx.r2.dev
 
 - `POST /api/admin/upload`는 **관리자 쿠키**가 있을 때만 업로드를 허용합니다.
 - 파일 크기 제한은 **30MB**입니다 (`ADMIN_UPLOAD_MAX_BYTES`).
+- **JPEG / PNG / WebP** 업로드 시 서버에서 [sharp](https://sharp.pixelplumbing.com/)로 **긴 변 최대 2400px** 안으로 맞춘 뒤, **원본 파일보다 바이트가 줄어들 때만** 압축본을 R2에 저장합니다. (재인코딩만 하면 커지는 경우가 있어, 그때는 **원본 그대로** 둡니다.) 알파가 없는 PNG는 JPEG 후보로 비교합니다.
 - 버킷을 완전히 비공개로 두고 싶다면 **서명 URL** 방식으로 바꿔야 하며, 현재 구현은 **공개 읽기 가능한 베이스 URL**을 전제로 합니다.
+
+## 6-1. 화면에서 로딩을 줄이는 방법 (이 프로젝트)
+
+1. **업로드 시 줄이기** — 위 sharp 처리로 저장 용량·픽셀 수가 줄어듭니다. **이미 올라간 예전 파일**은 DB·R2 URL이 그대로이므로, 필요하면 관리자에서 **다시 업로드**하면 새 정책이 적용됩니다.
+2. **표시 시 줄이기** — 프로젝트 **대표 이미지** 등은 `R2_PUBLIC_BASE_URL` 아래 주소일 때 [next/image](https://nextjs.org/docs/app/api-reference/components/image)로 **WebP/AVIF·`sizes`에 맞는 해상도**를 내려받습니다. `next.config.ts`의 `images.remotePatterns`는 빌드 시점의 `R2_PUBLIC_BASE_URL` 호스트를 사용하므로, **EC2에서 `npm run build` 할 때** `.env.production`에 동일 값이 있어야 합니다.
+3. **본문 HTML 안의 `<img>`** — Tiptap에 넣은 이미지는 그대로 `<img src="R2 URL">`로 렌더링됩니다. 용량을 줄이려면 **에디터에서 이미지를 다시 올리거나** URL을 바꾸는 방식이 필요합니다.
+
+### Cloudflare만으로 할 수 있는 것
+
+- **R2 공개 URL을 브라우저가 직접** 열 때(예: `*.r2.dev`)는 트래픽이 **사이트 도메인을 거치지 않아** 대시보드의 **Polish**가 적용되지 않는 경우가 많습니다.
+- **커스텀 도메인을 Cloudflare에 프록시(주황 구름)** 하고 R2/Workers로 연결한 뒤 그 도메인으로 이미지를 제공하면 **Polish** 등을 검토할 수 있습니다. (유료·설정 난이도에 따라 [Cloudflare Images](https://developers.cloudflare.com/images/)도 선택지입니다.)
 
 ## 7. 문제 해결
 

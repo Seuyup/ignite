@@ -28,7 +28,7 @@ export default async function AdminModifyProjectPage({ searchParams }: Props) {
       <p>
         <Link
           href="/admin/projects/list"
-          className="text-xs uppercase tracking-[0.12em] text-neutral-500 transition-colors hover:text-neutral-900"
+          className="inline-block rounded-md px-2 py-1 text-xs uppercase tracking-[0.12em] text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
         >
           ← 프로젝트 목록
         </Link>
@@ -37,8 +37,9 @@ export default async function AdminModifyProjectPage({ searchParams }: Props) {
         프로젝트 수정
       </h1>
       <p className="mt-3 max-w-xl text-sm text-neutral-500">
-        제목·부제·본문을 수정합니다. Slug는 공개 URL과 연결되어 있어 변경할 수
-        없습니다.
+        제목·부제·slug·본문을 수정합니다. slug를 바꾸면 공개 URL(
+        <code className="text-neutral-600">/projects/…</code>)이 함께
+        바뀌므로 외부 링크·북마크를 갱신하세요.
       </p>
       <div className="mt-10">
         <ProjectForm mode="edit" initial={initial} />

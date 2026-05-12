@@ -22,20 +22,20 @@ export default async function AdminPanelLayout({
       >
         <Link
           href="/admin/projects/list"
-          className="text-neutral-600 transition-colors hover:text-neutral-900"
+          className="rounded-md px-2 py-1 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
         >
           프로젝트
         </Link>
         <Link
           href="/admin/contact"
-          className="text-neutral-600 transition-colors hover:text-neutral-900"
+          className="rounded-md px-2 py-1 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
         >
           연락처
         </Link>
         <form action={logoutAction} className="ml-auto">
           <button
             type="submit"
-            className="text-neutral-500 transition-colors hover:text-neutral-900"
+            className="rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-xs text-neutral-500 transition-colors hover:border-neutral-400 hover:bg-neutral-50 hover:text-neutral-900"
           >
             로그아웃
           </button>

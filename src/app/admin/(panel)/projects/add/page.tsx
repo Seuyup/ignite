@@ -11,7 +11,7 @@ export default function AdminAddProjectPage() {
       <p>
         <Link
           href="/admin/projects/list"
-          className="text-xs uppercase tracking-[0.12em] text-neutral-500 transition-colors hover:text-neutral-900"
+          className="inline-block rounded-md px-2 py-1 text-xs uppercase tracking-[0.12em] text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
         >
           ← 프로젝트 목록
         </Link>

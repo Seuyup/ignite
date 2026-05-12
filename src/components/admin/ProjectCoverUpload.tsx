@@ -1,10 +1,11 @@
 "use client";
 
+import { AdminImageUploadOverlay } from "@/components/admin/AdminImageUploadOverlay";
 import {
   ADMIN_UPLOAD_MAX_BYTES,
   ADMIN_UPLOAD_MAX_LABEL,
-  parseAdminUploadResponse,
 } from "@/lib/admin-upload";
+import { postAdminImageUpload, type AdminUploadProgress } from "@/lib/admin-upload-xhr";
 import { useRef, useState } from "react";
 
 type Props = {
@@ -14,7 +15,11 @@ type Props = {
 export function ProjectCoverUpload({ initialUrl = "" }: Props) {
   const [coverUrl, setCoverUrl] = useState(initialUrl);
   const fileRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<AdminUploadProgress | null>(
+    null,
+  );
+
+  const busy = uploadProgress !== null;
 
   const uploadFile = async (file: File) => {
     if (file.size > ADMIN_UPLOAD_MAX_BYTES) {
@@ -23,20 +28,14 @@ export function ProjectCoverUpload({ initialUrl = "" }: Props) {
       );
       return;
     }
-    setUploading(true);
-    const fd = new FormData();
-    fd.append("file", file);
+    setUploadProgress({ phase: "uploading", loaded: 0, total: file.size });
     try {
-      const res = await fetch("/api/admin/upload", {
-        method: "POST",
-        body: fd,
-      });
-      const data = await parseAdminUploadResponse(res);
-      if (!res.ok) {
-        window.alert(data.error ?? "업로드에 실패했습니다.");
+      const result = await postAdminImageUpload(file, setUploadProgress);
+      if (!result.ok) {
+        window.alert(result.error);
         return;
       }
-      if (data.url) setCoverUrl(data.url);
+      setCoverUrl(result.url);
     } catch (e) {
       const msg =
         e instanceof Error
@@ -44,12 +43,13 @@ export function ProjectCoverUpload({ initialUrl = "" }: Props) {
           : "업로드 중 알 수 없는 오류가 발생했습니다.";
       window.alert(msg);
     } finally {
-      setUploading(false);
+      setUploadProgress(null);
     }
   };
 
   return (
     <div className="space-y-3">
+      <AdminImageUploadOverlay progress={uploadProgress} />
       <input type="hidden" name="coverImageUrl" value={coverUrl} readOnly />
       <span className="block text-xs uppercase tracking-[0.12em] text-neutral-500">
         대표 이미지
@@ -77,17 +77,17 @@ export function ProjectCoverUpload({ initialUrl = "" }: Props) {
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
-          disabled={uploading}
+          disabled={busy}
           onClick={() => fileRef.current?.click()}
-          className="border border-neutral-300 bg-white px-3 py-1.5 text-xs text-neutral-800 transition-colors hover:border-neutral-900 disabled:opacity-50"
+          className="rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-xs text-neutral-800 transition-colors hover:border-neutral-900 disabled:opacity-50"
         >
-          {uploading ? "업로드 중…" : "파일 업로드"}
+          {busy ? "처리 중…" : "파일 업로드"}
         </button>
         <button
           type="button"
           disabled={!coverUrl}
           onClick={() => setCoverUrl("")}
-          className="border border-neutral-200 px-3 py-1.5 text-xs text-neutral-600 transition-colors hover:border-red-300 hover:text-red-700 disabled:opacity-40"
+          className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs text-neutral-600 transition-colors hover:border-red-300 hover:text-red-700 disabled:opacity-40"
         >
           제거
         </button>
@@ -117,7 +117,7 @@ export function ProjectCoverUpload({ initialUrl = "" }: Props) {
           value={coverUrl}
           onChange={(e) => setCoverUrl(e.target.value)}
           placeholder="https://..."
-          className="mt-1 w-full border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
+          className="mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
         />
       </div>
     </div>

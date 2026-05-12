@@ -7,6 +7,8 @@ import {
   type ProjectFormState,
 } from "@/lib/actions/project-actions";
 import type { AdminProjectEditPayload } from "@/lib/admin-project-queries";
+import { AdminSavingOverlay } from "@/components/admin/AdminSavingOverlay";
+import { AdminSlugField } from "@/components/admin/AdminSlugField";
 import { ProjectCoverUpload } from "@/components/admin/ProjectCoverUpload";
 import { ProjectHtmlEditor } from "@/components/admin/ProjectHtmlEditor";
 
@@ -27,12 +29,12 @@ export function ProjectForm(props: Props) {
   const getHtmlRef = useRef<() => string>(() => "");
 
   const editorKey =
-    isEdit && initialData ? `edit-${initialData.slug}` : "create";
+    isEdit && initialData ? `edit-${initialData.id}` : "create";
 
   return (
     <form
       action={formAction}
-      className="max-w-3xl space-y-6"
+      className="relative max-w-3xl space-y-6"
       onSubmit={(e) => {
         const form = e.currentTarget;
         const el = form.elements.namedItem("contentHtml");
@@ -42,7 +44,7 @@ export function ProjectForm(props: Props) {
       }}
     >
       {isEdit && props.mode === "edit" ? (
-        <input type="hidden" name="originalSlug" value={props.initial.slug} />
+        <input type="hidden" name="originalSlug" defaultValue={props.initial.slug} />
       ) : null}
 
       <div>
@@ -58,7 +60,7 @@ export function ProjectForm(props: Props) {
           type="text"
           required
           defaultValue={initialData?.title}
-          className="mt-2 w-full border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
+          className="mt-2 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
         />
       </div>
       <div>
@@ -73,39 +75,15 @@ export function ProjectForm(props: Props) {
           name="subtitle"
           type="text"
           defaultValue={initialData?.subtitle}
-          className="mt-2 w-full border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
+          className="mt-2 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
         />
       </div>
-      <div>
-        <label
-          htmlFor="slug"
-          className="block text-xs uppercase tracking-[0.12em] text-neutral-500"
-        >
-          Slug (URL)
-        </label>
-        <input
-          id="slug"
-          name="slug"
-          type="text"
-          required
-          readOnly={isEdit}
-          defaultValue={initialData?.slug}
-          placeholder="예: mega-phactory"
-          pattern="[a-z0-9]+(-[a-z0-9]+)*"
-          className="mt-2 w-full border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none read-only:bg-neutral-100 read-only:text-neutral-600 focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900"
-        />
-        <p className="mt-1 text-xs text-neutral-400">
-          {isEdit
-            ? "등록된 주소(slug)는 변경할 수 없습니다."
-            : "영문 소문자, 숫자, 하이픈만 사용합니다. 상세 페이지 주소는 "}
-          {!isEdit ? (
-            <>
-              <code className="text-neutral-600">/projects/&#123;slug&#125;</code>
-              입니다.
-            </>
-          ) : null}
-        </p>
-      </div>
+
+      <AdminSlugField
+        mode={isEdit ? "edit" : "create"}
+        defaultSlug={initialData?.slug ?? ""}
+        excludeId={isEdit && initialData ? initialData.id : undefined}
+      />
 
       <ProjectCoverUpload
         key={editorKey}
@@ -149,10 +127,16 @@ export function ProjectForm(props: Props) {
       <button
         type="submit"
         disabled={pending}
-        className="bg-neutral-900 px-4 py-2 text-sm text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="rounded-lg bg-neutral-900 px-4 py-2 text-sm text-white transition-opacity hover:opacity-90 disabled:opacity-50"
       >
         {pending ? "저장 중…" : "저장"}
       </button>
+
+      <AdminSavingOverlay
+        open={pending}
+        title="프로젝트 저장 중"
+        subtitle="본문·표지·제목 등 프로젝트 데이터를 서버에 저장하는 중입니다."
+      />
     </form>
   );
 }

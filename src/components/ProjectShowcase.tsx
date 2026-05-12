@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { R2Image } from "@/components/R2Image";
 import type { Project } from "@/lib/projects";
 
 type Props = { projects: Project[] };
@@ -21,11 +22,12 @@ export function ProjectShowcase({ projects }: Props) {
             >
               {p.coverImageUrl ? (
                 <div className="relative mb-6 aspect-[21/9] max-h-[min(52vh,420px)] w-full overflow-hidden rounded-xl bg-neutral-100 md:aspect-[2.4/1]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <R2Image
                     src={p.coverImageUrl}
                     alt=""
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+                    mode="fill"
+                    className="object-cover transition duration-500 group-hover:scale-[1.02]"
+                    sizes="(max-width: 768px) 100vw, 1152px"
                   />
                 </div>
               ) : null}

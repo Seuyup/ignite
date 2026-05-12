@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { R2Image } from "@/components/R2Image";
 import {
   getProjectBySlug,
   getProjectSlugsForStaticParams,
@@ -47,12 +48,14 @@ export default async function ProjectDetailPage({ params }: Props) {
       </Link>
 
       {cover ? (
-        <div className="relative mt-8 overflow-hidden rounded-2xl bg-neutral-100">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+        <div className="relative mt-8 aspect-[21/10] max-h-[min(70vh,520px)] w-full overflow-hidden rounded-2xl bg-neutral-100 md:aspect-[2.5/1]">
+          <R2Image
             src={cover}
             alt=""
-            className="aspect-[21/10] max-h-[min(70vh,520px)] w-full object-cover md:aspect-[2.5/1]"
+            mode="fill"
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 1152px"
+            priority
           />
         </div>
       ) : null}
