@@ -7,7 +7,7 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-8 md:flex-row md:items-start md:justify-between md:py-10">
         <Link
           href="/"
-          className="text-xl font-medium tracking-tight text-neutral-900 transition-opacity hover:opacity-70"
+          className="text-[1.625rem] font-medium leading-tight tracking-tight text-neutral-900 transition-opacity hover:opacity-70"
         >
           ignite
         </Link>
