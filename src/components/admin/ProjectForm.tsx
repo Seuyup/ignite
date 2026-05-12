@@ -1,12 +1,14 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   createProjectAction,
   updateProjectAction,
   type ProjectFormState,
 } from "@/lib/actions/project-actions";
 import type { AdminProjectEditPayload } from "@/lib/admin-project-queries";
+import { AdminSaveSuccessDialog } from "@/components/admin/AdminSaveSuccessDialog";
 import { AdminSavingOverlay } from "@/components/admin/AdminSavingOverlay";
 import { AdminSlugField } from "@/components/admin/AdminSlugField";
 import { ProjectCoverUpload } from "@/components/admin/ProjectCoverUpload";
@@ -21,15 +23,35 @@ type Props =
 export function ProjectForm(props: Props) {
   const isEdit = props.mode === "edit";
   const initialData = isEdit ? props.initial : null;
+  const router = useRouter();
 
   const [state, formAction, pending] = useActionState(
     isEdit ? updateProjectAction : createProjectAction,
     initial,
   );
   const getHtmlRef = useRef<() => string>(() => "");
+  const [savedUiDismissed, setSavedUiDismissed] = useState(false);
+
+  useEffect(() => {
+    if (pending) setSavedUiDismissed(false);
+  }, [pending]);
 
   const editorKey =
     isEdit && initialData ? `edit-${initialData.id}` : "create";
+
+  const savedSlug = state.savedSlug;
+  const showSaveSuccess = Boolean(
+    state.saved && savedSlug && !savedUiDismissed,
+  );
+
+  const handleCloseSaveSuccess = () => {
+    setSavedUiDismissed(true);
+    if (isEdit && savedSlug) {
+      router.replace(
+        `/admin/projects/modify?slug=${encodeURIComponent(savedSlug)}`,
+      );
+    }
+  };
 
   return (
     <form
@@ -136,6 +158,14 @@ export function ProjectForm(props: Props) {
         open={pending}
         title="프로젝트 저장 중"
         subtitle="본문·표지·제목 등 프로젝트 데이터를 서버에 저장하는 중입니다."
+      />
+
+      <AdminSaveSuccessDialog
+        open={showSaveSuccess}
+        message="프로젝트가 저장되었습니다."
+        viewHref={`/projects/${savedSlug}`}
+        viewLabel="보기"
+        onClose={handleCloseSaveSuccess}
       />
     </form>
   );

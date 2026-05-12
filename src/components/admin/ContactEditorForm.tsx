@@ -1,10 +1,12 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import {
   updateContactAction,
   type ContactFormState,
 } from "@/lib/actions/contact-actions";
+import { AdminSaveSuccessDialog } from "@/components/admin/AdminSaveSuccessDialog";
+import { AdminSavingOverlay } from "@/components/admin/AdminSavingOverlay";
 import { ProjectHtmlEditor } from "@/components/admin/ProjectHtmlEditor";
 
 const initial: ContactFormState = { error: null };
@@ -17,14 +19,16 @@ export function ContactEditorForm({ initialBody }: Props) {
     initial,
   );
   const getHtmlRef = useRef<() => string>(() => "");
+  const [savedUiDismissed, setSavedUiDismissed] = useState(false);
+
+  useEffect(() => {
+    if (pending) setSavedUiDismissed(false);
+  }, [pending]);
+
+  const showSaveSuccess = Boolean(state.saved && !savedUiDismissed);
 
   return (
-    <div className="max-w-3xl space-y-6">
-      {state.saved ? (
-        <p className="text-sm text-green-700" role="status">
-          저장되었습니다.
-        </p>
-      ) : null}
+    <div className="relative max-w-3xl space-y-6">
       <form
         action={formAction}
         className="space-y-4"
@@ -67,6 +71,20 @@ export function ContactEditorForm({ initialBody }: Props) {
           {pending ? "저장 중…" : "저장"}
         </button>
       </form>
+
+      <AdminSavingOverlay
+        open={pending}
+        title="연락처 저장 중"
+        subtitle="공개 연락처 페이지에 반영하는 중입니다."
+      />
+
+      <AdminSaveSuccessDialog
+        open={showSaveSuccess}
+        message="연락처가 저장되었습니다."
+        viewHref="/contact"
+        viewLabel="보기"
+        onClose={() => setSavedUiDismissed(true)}
+      />
     </div>
   );
 }

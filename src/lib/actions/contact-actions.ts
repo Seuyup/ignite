@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/admin-guard";
 import { connectDB } from "@/lib/mongodb";
 import { ContactSettings } from "@/lib/models/ContactSettings";
@@ -26,6 +27,8 @@ export async function updateContactAction(
   } catch {
     return { error: "저장에 실패했습니다." };
   }
+
+  revalidatePath("/contact");
 
   return { error: null, saved: true };
 }

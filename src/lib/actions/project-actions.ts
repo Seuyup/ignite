@@ -1,13 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { assertAdmin } from "@/lib/admin-guard";
 import { isSlugTakenByActiveProject } from "@/lib/admin-project-queries";
 import { connectDB } from "@/lib/mongodb";
 import { Project } from "@/lib/models/Project";
 
-export type ProjectFormState = { error: string | null };
+export type ProjectFormState = {
+  error: string | null;
+  saved?: boolean;
+  /** 공개 상세 경로용 slug */
+  savedSlug?: string;
+};
 
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -70,7 +74,7 @@ export async function createProjectAction(
   revalidatePath("/projects");
   revalidatePath("/");
 
-  redirect(`/projects/${slugRaw}`);
+  return { error: null, saved: true, savedSlug: slugRaw };
 }
 
 export async function updateProjectAction(
@@ -145,6 +149,8 @@ export async function updateProjectAction(
     revalidatePath(`/projects/${slugRaw}`);
     revalidatePath("/projects");
     revalidatePath("/");
+
+    return { error: null, saved: true, savedSlug: slugRaw };
   } catch (e: unknown) {
     if (
       typeof e === "object" &&
@@ -156,6 +162,4 @@ export async function updateProjectAction(
     }
     return { error: "저장에 실패했습니다. 잠시 후 다시 시도하세요." };
   }
-
-  redirect(`/admin/projects/modify?slug=${encodeURIComponent(slugRaw)}`);
 }
