@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  ADMIN_UPLOAD_MAX_BYTES,
+  ADMIN_UPLOAD_MAX_LABEL,
+  parseAdminUploadResponse,
+} from "@/lib/admin-upload";
 import { useRef, useState } from "react";
 
 type Props = {
@@ -12,6 +17,12 @@ export function ProjectCoverUpload({ initialUrl = "" }: Props) {
   const [uploading, setUploading] = useState(false);
 
   const uploadFile = async (file: File) => {
+    if (file.size > ADMIN_UPLOAD_MAX_BYTES) {
+      window.alert(
+        `파일 크기는 ${ADMIN_UPLOAD_MAX_LABEL} 이하여야 합니다. (현재 ${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
+      );
+      return;
+    }
     setUploading(true);
     const fd = new FormData();
     fd.append("file", file);
@@ -20,14 +31,18 @@ export function ProjectCoverUpload({ initialUrl = "" }: Props) {
         method: "POST",
         body: fd,
       });
-      const data = (await res.json()) as { url?: string; error?: string };
+      const data = await parseAdminUploadResponse(res);
       if (!res.ok) {
         window.alert(data.error ?? "업로드에 실패했습니다.");
         return;
       }
       if (data.url) setCoverUrl(data.url);
-    } catch {
-      window.alert("업로드 중 오류가 발생했습니다.");
+    } catch (e) {
+      const msg =
+        e instanceof Error
+          ? `업로드 중 오류: ${e.message}`
+          : "업로드 중 알 수 없는 오류가 발생했습니다.";
+      window.alert(msg);
     } finally {
       setUploading(false);
     }
@@ -41,7 +56,7 @@ export function ProjectCoverUpload({ initialUrl = "" }: Props) {
       </span>
       <p className="text-xs text-neutral-400">
         프로젝트 목록에 크게 표시됩니다. R2에 업로드하거나 아래에 공개 URL을
-        입력하세요.
+        입력하세요. (이미지당 최대 {ADMIN_UPLOAD_MAX_LABEL})
       </p>
 
       {coverUrl ? (

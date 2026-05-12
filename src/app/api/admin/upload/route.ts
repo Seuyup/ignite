@@ -1,9 +1,8 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { ADMIN_UPLOAD_MAX_BYTES } from "@/lib/admin-upload";
 import { verifyAdminToken } from "@/lib/admin-session";
-
-const MAX_BYTES = 10 * 1024 * 1024;
 
 function safeKeySegment(name: string): string {
   const base = name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120);
@@ -41,8 +40,15 @@ export async function POST(request: Request) {
   let formData: FormData;
   try {
     formData = await request.formData();
-  } catch {
-    return NextResponse.json({ error: "잘못된 요청입니다." }, { status: 400 });
+  } catch (e) {
+    console.error("[admin/upload] formData", e);
+    return NextResponse.json(
+      {
+        error:
+          "요청 본문을 읽는 중 오류가 발생했습니다. 파일이 너무 크거나 연결이 끊겼을 수 있습니다.",
+      },
+      { status: 400 },
+    );
   }
 
   const file = formData.get("file");
@@ -50,14 +56,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "파일이 없습니다." }, { status: 400 });
   }
 
-  if (file.size > MAX_BYTES) {
+  if (file.size > ADMIN_UPLOAD_MAX_BYTES) {
     return NextResponse.json(
-      { error: "파일 크기는 10MB 이하여야 합니다." },
+      { error: `파일 크기는 ${ADMIN_UPLOAD_MAX_BYTES / (1024 * 1024)}MB 이하여야 합니다.` },
       { status: 400 },
     );
   }
 
-  const buf = Buffer.from(await file.arrayBuffer());
+  let buf: Buffer;
+  try {
+    buf = Buffer.from(await file.arrayBuffer());
+  } catch (e) {
+    console.error("[admin/upload] arrayBuffer", e);
+    return NextResponse.json(
+      { error: "파일 데이터를 읽는 중 오류가 발생했습니다." },
+      { status: 400 },
+    );
+  }
   const key = `projects/${Date.now()}-${safeKeySegment(file.name)}`;
 
   const client = new S3Client({
@@ -78,11 +93,23 @@ export async function POST(request: Request) {
         ContentType: file.type || "application/octet-stream",
       }),
     );
-  } catch {
-    return NextResponse.json(
-      { error: "스토리지 업로드에 실패했습니다." },
-      { status: 502 },
-    );
+  } catch (e) {
+    console.error("[admin/upload] PutObject", e);
+    let message = "스토리지 업로드에 실패했습니다. 잠시 후 다시 시도해 주세요.";
+    if (e instanceof Error) {
+      const m = e.message;
+      if (/timeout|ETIMEDOUT|Timeout/i.test(m)) {
+        message =
+          "스토리지 응답 시간이 초과되었습니다. 네트워크 상태를 확인한 뒤 다시 시도해 주세요.";
+      } else if (/ENOTFOUND|ECONNREFUSED|ECONNRESET|EAI_AGAIN/i.test(m)) {
+        message =
+          "스토리지 서버에 연결할 수 없습니다. R2 엔드포인트·방화벽·환경 변수를 확인해 주세요.";
+      } else if (/AccessDenied|403|not authorized/i.test(m)) {
+        message =
+          "스토리지 접근이 거부되었습니다. R2 API 토큰 권한과 버킷 이름을 확인해 주세요.";
+      }
+    }
+    return NextResponse.json({ error: message }, { status: 502 });
   }
 
   const base = publicBase.replace(/\/$/, "");

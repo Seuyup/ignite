@@ -55,7 +55,7 @@ R2_PUBLIC_BASE_URL=https://pub-xxxx.r2.dev
 ## 6. 동작과 보안
 
 - `POST /api/admin/upload`는 **관리자 쿠키**가 있을 때만 업로드를 허용합니다.
-- 파일 크기 제한은 약 **10MB**입니다 (코드 상 `MAX_BYTES`).
+- 파일 크기 제한은 **30MB**입니다 (`ADMIN_UPLOAD_MAX_BYTES`).
 - 버킷을 완전히 비공개로 두고 싶다면 **서명 URL** 방식으로 바꿔야 하며, 현재 구현은 **공개 읽기 가능한 베이스 URL**을 전제로 합니다.
 
 ## 7. 문제 해결
@@ -66,5 +66,6 @@ R2_PUBLIC_BASE_URL=https://pub-xxxx.r2.dev
 | 업로드는 되는데 이미지가 안 보임 | `R2_PUBLIC_BASE_URL`이 버킷의 공개 접근 방식과 일치하는지, 객체 경로가 브라우저에서 열리는지 |
 | 401 | 관리자 로그인 후 같은 브라우저에서 업로드하는지 (쿠키 전송) |
 | CORS | 같은 출처(`/api/admin/upload`)로 업로드하므로 일반적으로 추가 CORS 설정 불필요 |
+| 로컬만 되고 EC2(실서버)에서만 실패, 알림이 **「업로드 중 오류가 발생했습니다.」** | Nginx 기본 `client_max_body_size`가 **1MB**인 경우가 많아, 큰 이미지는 **413 HTML**을 돌려 JSON 파싱이 실패함. `server { ... }` 안에 `client_max_body_size 35m;` 이상 추가 후 `sudo nginx -t && sudo systemctl reload nginx` |
 
 자세한 최신 UI 이름은 [Cloudflare R2 문서](https://developers.cloudflare.com/r2/)를 참고하세요.

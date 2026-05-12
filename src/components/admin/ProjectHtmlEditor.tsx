@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  ADMIN_UPLOAD_MAX_BYTES,
+  ADMIN_UPLOAD_MAX_LABEL,
+  parseAdminUploadResponse,
+} from "@/lib/admin-upload";
 import ImageExtension from "@tiptap/extension-image";
 import LinkExtension from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -101,6 +106,13 @@ export function ProjectHtmlEditor({
     e.target.value = "";
     if (!file || !editor || sourceMode) return;
 
+    if (file.size > ADMIN_UPLOAD_MAX_BYTES) {
+      window.alert(
+        `파일 크기는 ${ADMIN_UPLOAD_MAX_LABEL} 이하여야 합니다. (현재 ${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
+      );
+      return;
+    }
+
     const fd = new FormData();
     fd.append("file", file);
 
@@ -109,7 +121,7 @@ export function ProjectHtmlEditor({
         method: "POST",
         body: fd,
       });
-      const data = (await res.json()) as { url?: string; error?: string };
+      const data = await parseAdminUploadResponse(res);
       if (!res.ok) {
         window.alert(data.error ?? "이미지 업로드에 실패했습니다.");
         return;
@@ -117,8 +129,12 @@ export function ProjectHtmlEditor({
       if (data.url) {
         editor.chain().focus().setImage({ src: data.url }).run();
       }
-    } catch {
-      window.alert("이미지 업로드 중 오류가 발생했습니다.");
+    } catch (e) {
+      const msg =
+        e instanceof Error
+          ? `이미지 업로드 중 오류: ${e.message}`
+          : "이미지 업로드 중 알 수 없는 오류가 발생했습니다.";
+      window.alert(msg);
     }
   };
 
