@@ -1,5 +1,6 @@
 import { SectionPage } from "@/components/SectionPage";
 import { getContactBody } from "@/lib/ignite-data";
+import { ProseHtmlWithImageLightbox } from "@/components/ProseHtmlWithImageLightbox";
 import { sanitizeRichHtml } from "@/lib/sanitize-html";
 
 export const dynamic = "force-dynamic";
@@ -16,9 +17,9 @@ export default async function ContactPage() {
     const safeHtml = sanitizeRichHtml(body);
     return (
       <SectionPage title="contact">
-        <div
+        <ProseHtmlWithImageLightbox
+          html={safeHtml}
           className="prose prose-neutral max-w-3xl prose-headings:font-medium prose-headings:tracking-tight prose-p:text-neutral-600 prose-a:text-neutral-900 prose-img:rounded prose-img:border prose-img:border-neutral-200"
-          dangerouslySetInnerHTML={{ __html: safeHtml }}
         />
       </SectionPage>
     );

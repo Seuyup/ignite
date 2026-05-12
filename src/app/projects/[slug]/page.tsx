@@ -6,6 +6,7 @@ import {
   getProjectBySlug,
   getProjectSlugsForStaticParams,
 } from "@/lib/project-queries";
+import { ProseHtmlWithImageLightbox } from "@/components/ProseHtmlWithImageLightbox";
 import { sanitizeRichHtml } from "@/lib/sanitize-html";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -73,9 +74,9 @@ export default async function ProjectDetailPage({ params }: Props) {
         ) : null}
       </header>
       {hasRichBody ? (
-        <div
+        <ProseHtmlWithImageLightbox
+          html={safeHtml}
           className="prose prose-neutral mt-12 max-w-none prose-headings:font-medium prose-headings:tracking-tight prose-p:text-neutral-600 prose-a:text-neutral-900 prose-img:rounded prose-img:border prose-img:border-neutral-200"
-          dangerouslySetInnerHTML={{ __html: safeHtml }}
         />
       ) : cover ? (
         <p className="mt-10 max-w-2xl text-sm leading-relaxed text-neutral-600 md:text-base">
