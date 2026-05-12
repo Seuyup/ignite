@@ -74,7 +74,7 @@ export default async function ProjectDetailPage({ params }: Props) {
       </header>
       {hasRichBody ? (
         <div
-          className="prose prose-neutral mt-12 max-w-3xl prose-headings:font-medium prose-headings:tracking-tight prose-p:text-neutral-600 prose-a:text-neutral-900 prose-img:rounded prose-img:border prose-img:border-neutral-200"
+          className="prose prose-neutral mt-12 max-w-none prose-headings:font-medium prose-headings:tracking-tight prose-p:text-neutral-600 prose-a:text-neutral-900 prose-img:rounded prose-img:border prose-img:border-neutral-200"
           dangerouslySetInnerHTML={{ __html: safeHtml }}
         />
       ) : cover ? (

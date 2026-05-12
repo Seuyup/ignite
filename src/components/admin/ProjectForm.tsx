@@ -7,7 +7,7 @@ import {
   updateProjectAction,
   type ProjectFormState,
 } from "@/lib/actions/project-actions";
-import type { AdminProjectEditPayload } from "@/lib/admin-project-queries";
+import type { AdminProjectEditPayload } from "@/lib/admin-project-shared";
 import { AdminSaveSuccessDialog } from "@/components/admin/AdminSaveSuccessDialog";
 import { AdminSavingOverlay } from "@/components/admin/AdminSavingOverlay";
 import { AdminSlugField } from "@/components/admin/AdminSlugField";
@@ -56,7 +56,7 @@ export function ProjectForm(props: Props) {
   return (
     <form
       action={formAction}
-      className="relative max-w-3xl space-y-6"
+      className="relative w-full max-w-none space-y-6"
       onSubmit={(e) => {
         const form = e.currentTarget;
         const el = form.elements.namedItem("contentHtml");

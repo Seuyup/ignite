@@ -4,6 +4,10 @@ export type AdminUploadProgress = {
   phase: "uploading" | "processing";
   loaded: number;
   total: number;
+  /** 여러 파일 업로드 시 1-based 순번 (선택) */
+  batchIndex?: number;
+  /** 여러 파일 업로드 시 총 개수 (선택) */
+  batchTotal?: number;
 };
 
 /**

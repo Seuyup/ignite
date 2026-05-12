@@ -17,20 +17,26 @@ export default async function AdminPanelLayout({
   return (
     <div className="mx-auto max-w-6xl px-6 py-12 md:py-16">
       <nav
-        className="mb-10 flex flex-wrap items-center gap-6 border-b border-neutral-200 pb-6 text-sm"
+        className="mb-10 flex flex-wrap items-center gap-6 border-b border-neutral-200 pb-6 text-sm uppercase tracking-[0.12em]"
         aria-label="관리자 메뉴"
       >
         <Link
           href="/admin/projects/list"
           className="rounded-md px-2 py-1 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
         >
-          프로젝트
+          project
         </Link>
         <Link
           href="/admin/contact"
           className="rounded-md px-2 py-1 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
         >
-          연락처
+          contact
+        </Link>
+        <Link
+          href="/admin/instagram"
+          className="rounded-md px-2 py-1 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+        >
+          @instagram
         </Link>
         <form action={logoutAction} className="ml-auto">
           <button

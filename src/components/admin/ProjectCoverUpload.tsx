@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminImageUploadOverlay } from "@/components/admin/AdminImageUploadOverlay";
+import { R2Image } from "@/components/R2Image";
 import {
   ADMIN_UPLOAD_MAX_BYTES,
   ADMIN_UPLOAD_MAX_LABEL,
@@ -60,16 +61,17 @@ export function ProjectCoverUpload({ initialUrl = "" }: Props) {
       </p>
 
       {coverUrl ? (
-        <div className="relative overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50">
-          {/* eslint-disable-next-line @next/next/no-img-element -- 외부 R2 URL */}
-          <img
+        <div className="relative aspect-[21/10] max-h-[min(70vh,520px)] w-full overflow-hidden rounded-2xl bg-neutral-100 md:aspect-[2.5/1]">
+          <R2Image
             src={coverUrl}
             alt=""
-            className="mx-auto max-h-52 w-full object-contain"
+            mode="fill"
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 1152px"
           />
         </div>
       ) : (
-        <div className="flex min-h-[140px] items-center justify-center rounded-lg border border-dashed border-neutral-300 bg-neutral-50 text-xs text-neutral-400">
+        <div className="relative flex aspect-[21/10] max-h-[min(70vh,520px)] w-full items-center justify-center overflow-hidden rounded-2xl border border-dashed border-neutral-300 bg-neutral-100 md:aspect-[2.5/1] text-xs text-neutral-400">
           등록된 이미지 없음
         </div>
       )}

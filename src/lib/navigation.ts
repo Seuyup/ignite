@@ -8,9 +8,4 @@ export const mainNav: NavItem[] = [
   { label: "ignite", href: "/ignite" },
   { label: "people", href: "/people" },
   { label: "contact", href: "/contact" },
-  {
-    label: "@instagram",
-    href: "https://www.instagram.com/wgnb.kr/",
-    external: true,
-  },
 ];

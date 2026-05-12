@@ -6,6 +6,7 @@ import {
   RestoreProjectButton,
 } from "@/components/admin/TrashProjectRowActions";
 import { listTrashedProjectsPaginated } from "@/lib/admin-project-queries";
+import { projectListDisplayDate } from "@/lib/admin-project-shared";
 
 export const metadata = {
   title: "프로젝트 휴지통",
@@ -83,7 +84,7 @@ export default async function AdminTrashProjectsPage({ searchParams }: Props) {
                 <th className="px-4 py-3 font-medium">제목</th>
                 <th className="px-4 py-3 font-medium">Slug</th>
                 <th className="px-4 py-3 font-medium whitespace-nowrap">
-                  작성일
+                  수정일
                 </th>
                 <th className="px-4 py-3 font-medium whitespace-nowrap">작업</th>
               </tr>
@@ -121,7 +122,7 @@ export default async function AdminTrashProjectsPage({ searchParams }: Props) {
                     <code className="text-xs">{row.slug}</code>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-neutral-600">
-                    {row.createdAt.toLocaleString("ko-KR", {
+                    {projectListDisplayDate(row).toLocaleString("ko-KR", {
                       dateStyle: "medium",
                       timeStyle: "short",
                     })}

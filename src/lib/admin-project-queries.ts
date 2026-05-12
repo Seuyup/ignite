@@ -1,23 +1,13 @@
 import { connectDB } from "@/lib/mongodb";
 import { Project } from "@/lib/models/Project";
+import type {
+  AdminProjectEditPayload,
+  AdminProjectRow,
+} from "@/lib/admin-project-shared";
 import mongoose from "mongoose";
 
-export type AdminProjectRow = {
-  id: string;
-  title: string;
-  slug: string;
-  createdAt: Date;
-  coverImageUrl?: string;
-};
-
-export type AdminProjectEditPayload = {
-  id: string;
-  title: string;
-  subtitle: string;
-  slug: string;
-  contentHtml: string;
-  coverImageUrl: string;
-};
+export type { AdminProjectEditPayload, AdminProjectRow } from "@/lib/admin-project-shared";
+export { projectListDisplayDate } from "@/lib/admin-project-shared";
 
 const ACTIVE = { deletedAt: null } as const;
 const LIMIT_OPTIONS = [10, 20, 50, 100] as const;
@@ -119,14 +109,15 @@ export async function listProjectsPaginated(options: {
       .sort({ sortOrder: 1, createdAt: -1 })
       .skip(skip)
       .limit(safeLimit)
-      .select("title slug createdAt coverImageUrl")
+      .select("title slug createdAt updatedAt coverImageUrl")
       .lean();
 
     const items: AdminProjectRow[] = rawItems.map((d) => ({
       id: String(d._id),
       title: d.title,
       slug: d.slug,
-      createdAt: d.createdAt ?? new Date(0),
+      createdAt: d.createdAt ? new Date(d.createdAt) : new Date(0),
+      updatedAt: d.updatedAt ? new Date(d.updatedAt) : undefined,
       coverImageUrl: d.coverImageUrl?.trim() || undefined,
     }));
 
@@ -172,14 +163,15 @@ export async function listTrashedProjectsPaginated(options: {
       .sort({ deletedAt: -1 })
       .skip(skip)
       .limit(safeLimit)
-      .select("title slug createdAt coverImageUrl")
+      .select("title slug createdAt updatedAt coverImageUrl")
       .lean();
 
     const items: AdminProjectRow[] = rawItems.map((d) => ({
       id: String(d._id),
       title: d.title,
       slug: d.slug,
-      createdAt: d.createdAt ?? new Date(0),
+      createdAt: d.createdAt ? new Date(d.createdAt) : new Date(0),
+      updatedAt: d.updatedAt ? new Date(d.updatedAt) : undefined,
       coverImageUrl: d.coverImageUrl?.trim() || undefined,
     }));
 

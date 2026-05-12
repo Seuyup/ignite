@@ -13,7 +13,10 @@ import {
 } from "react";
 import { R2Image } from "@/components/R2Image";
 import { ProjectListHeaderActions } from "@/components/admin/ProjectListHeaderActions";
-import type { AdminProjectRow } from "@/lib/admin-project-queries";
+import {
+  type AdminProjectRow,
+  projectListDisplayDate,
+} from "@/lib/admin-project-shared";
 import {
   softDeleteProjectAction,
   type IdActionState,
@@ -452,7 +455,7 @@ export function ProjectListSortableTable({
                     <code className="text-xs">{ghostRow.slug}</code>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-neutral-600">
-                    {new Date(ghostRow.createdAt).toLocaleString("ko-KR", {
+                    {projectListDisplayDate(ghostRow).toLocaleString("ko-KR", {
                       dateStyle: "medium",
                       timeStyle: "short",
                     })}
@@ -478,7 +481,7 @@ export function ProjectListSortableTable({
             </th>
             <th className="px-4 py-3 font-medium">제목</th>
             <th className="px-4 py-3 font-medium">Slug</th>
-            <th className="px-4 py-3 font-medium whitespace-nowrap">작성일</th>
+            <th className="px-4 py-3 font-medium whitespace-nowrap">수정일</th>
             <th className="px-4 py-3 font-medium whitespace-nowrap">작업</th>
           </tr>
         </thead>
@@ -549,7 +552,7 @@ export function ProjectListSortableTable({
                   <code className="text-xs">{row.slug}</code>
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-neutral-600">
-                  {new Date(row.createdAt).toLocaleString("ko-KR", {
+                  {projectListDisplayDate(row).toLocaleString("ko-KR", {
                     dateStyle: "medium",
                     timeStyle: "short",
                   })}

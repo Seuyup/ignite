@@ -1,7 +1,15 @@
 import Link from "next/link";
+import {
+  buildInstagramNavItem,
+  getInstagramHandle,
+} from "@/lib/ignite-data";
 import { mainNav } from "@/lib/navigation";
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const instagramHandle = await getInstagramHandle();
+  const instagramItem = buildInstagramNavItem(instagramHandle);
+  const navItems = instagramItem ? [...mainNav, instagramItem] : mainNav;
+
   return (
     <header className="border-b border-neutral-200 bg-white/90 backdrop-blur-sm">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-8 md:flex-row md:items-start md:justify-between md:py-10">
@@ -13,7 +21,7 @@ export function SiteHeader() {
         </Link>
         <nav aria-label="Primary">
           <ul className="flex flex-col gap-2 text-sm uppercase tracking-[0.12em] text-neutral-600 md:flex-row md:flex-wrap md:justify-end md:gap-x-6 md:gap-y-2">
-            {mainNav.map((item) => (
+            {navItems.map((item) => (
               <li key={item.href + item.label}>
                 {item.external ? (
                   <a

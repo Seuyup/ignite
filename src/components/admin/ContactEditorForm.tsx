@@ -28,7 +28,7 @@ export function ContactEditorForm({ initialBody }: Props) {
   const showSaveSuccess = Boolean(state.saved && !savedUiDismissed);
 
   return (
-    <div className="relative max-w-3xl space-y-6">
+    <div className="relative w-full max-w-none space-y-6">
       <form
         action={formAction}
         className="space-y-4"

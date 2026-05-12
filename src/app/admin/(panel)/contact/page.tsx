@@ -1,5 +1,5 @@
 import { ContactEditorForm } from "@/components/admin/ContactEditorForm";
-import { getContactForAdmin } from "@/lib/contact-data";
+import { getContactForAdmin } from "@/lib/ignite-data";
 
 export const metadata = {
   title: "연락처 편집",

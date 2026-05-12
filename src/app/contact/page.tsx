@@ -1,5 +1,5 @@
 import { SectionPage } from "@/components/SectionPage";
-import { getContactBody } from "@/lib/contact-data";
+import { getContactBody } from "@/lib/ignite-data";
 import { sanitizeRichHtml } from "@/lib/sanitize-html";
 
 export const dynamic = "force-dynamic";
