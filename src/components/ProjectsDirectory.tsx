@@ -69,14 +69,9 @@ export function ProjectsDirectory({ projects }: Props) {
                       {p.subtitle}
                     </p>
                   ) : null}
-                </div>
-                <p className="max-w-sm text-sm leading-relaxed text-neutral-500">
-                  상세 페이지에서 본문과 크레딧을 확인할 수 있습니다.
-                </p>
+                </div>                
                 <span className="inline-flex items-center gap-2 text-sm font-medium text-neutral-900">
-                  <span className="border-b border-neutral-900/30 pb-px transition-colors group-hover:border-neutral-900">
-                    프로젝트 보기
-                  </span>
+                  
                   <ArrowIcon className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                 </span>
               </div>
