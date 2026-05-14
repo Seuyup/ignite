@@ -42,14 +42,13 @@ export function HomeSlideshow({ images }: Props) {
   const currentHasLink = !!images[current]?.link?.trim();
 
   return (
-    <section className="flex h-[calc(100vh-72px)] w-full flex-col bg-[#f5f5f3]">
-      <div className="relative flex-1 overflow-hidden">
-        {/* Swiper – full width, each slide has internal padding */}
+    <section className="relative h-[calc(100vh-72px)] w-full bg-[#f5f5f3] md:-mt-[72px] md:h-screen md:bg-transparent">
+      <div className="relative h-full overflow-hidden">
         <Swiper
           modules={[Autoplay]}
           loop={total > 1}
-autoplay={total > 1 ? { delay: 5000, disableOnInteraction: false } : false}
-            speed={800}
+          autoplay={total > 1 ? { delay: 5000, disableOnInteraction: false } : false}
+          speed={800}
           onSwiper={(s) => { swiperRef.current = s; }}
           onSlideChange={(s) => setCurrent(s.realIndex)}
           className="h-full w-full"
@@ -57,7 +56,7 @@ autoplay={total > 1 ? { delay: 5000, disableOnInteraction: false } : false}
           {images.map((img, i) => (
             <SwiperSlide key={img.url} className="!flex items-center justify-center">
               <div
-                className={`relative h-full w-[86%] md:w-[80%] ${currentHasLink ? "cursor-pointer" : ""}`}
+                className={`relative h-full max-h-[90vh] w-[86%] md:w-[80%] ${currentHasLink ? "cursor-pointer" : ""}`}
                 onClick={handleImageClick}
               >
                 <R2Image
@@ -73,11 +72,11 @@ autoplay={total > 1 ? { delay: 5000, disableOnInteraction: false } : false}
           ))}
         </Swiper>
 
-        {/* Left arrow – PC only, hover to show */}
+        {/* Left nav zone – PC only */}
         {total > 1 && (
           <button
             type="button"
-            className="group absolute left-[50px] top-1/2 z-10 hidden -translate-y-1/2 cursor-pointer md:block"
+            className="group absolute left-0 top-0 z-10 hidden h-full w-[10%] cursor-pointer items-center justify-center md:flex"
             onClick={() => swiperRef.current?.slidePrev()}
             aria-label="이전 이미지"
           >
@@ -88,11 +87,11 @@ autoplay={total > 1 ? { delay: 5000, disableOnInteraction: false } : false}
           </button>
         )}
 
-        {/* Right arrow – PC only, hover to show */}
+        {/* Right nav zone – PC only */}
         {total > 1 && (
           <button
             type="button"
-            className="group absolute right-[50px] top-1/2 z-10 hidden -translate-y-1/2 cursor-pointer md:block"
+            className="group absolute right-0 top-0 z-10 hidden h-full w-[10%] cursor-pointer items-center justify-center md:flex"
             onClick={() => swiperRef.current?.slideNext()}
             aria-label="다음 이미지"
           >
@@ -104,8 +103,8 @@ autoplay={total > 1 ? { delay: 5000, disableOnInteraction: false } : false}
         )}
       </div>
 
-      {/* Bottom bar */}
-      <div className="flex items-center justify-end px-6 py-6 md:px-10 md:py-8">
+      {/* Bottom bar — overlaid on PC */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 flex items-center justify-end px-6 py-6 md:px-10 md:py-8">
         {total > 1 && (
           <span className="text-xs text-neutral-900">
             {current + 1} / {total}

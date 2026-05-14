@@ -59,7 +59,7 @@ export default async function ProjectSlugPage({ params }: Props) {
         <div className="flex">
           {/* Left - category nav (desktop) */}
           <div className="hidden w-[230px] flex-shrink-0 md:block">
-            <nav className="fixed top-1/2 left-[90px] z-30 -translate-y-1/2 space-y-1">
+            <nav className="fixed top-[25vh] left-[90px] z-30 space-y-1">
               {categories.map((cat) => (
                 <Link
                   key={cat.id}

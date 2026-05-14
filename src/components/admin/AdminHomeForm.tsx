@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { updateHomeImagesAction, type HomeFormState } from "@/lib/actions/home-actions";
+import { postAdminImageUpload } from "@/lib/admin-upload-xhr";
 import type { HomeImage } from "@/lib/ignite-data";
 
 const initial: HomeFormState = { error: null };
@@ -12,6 +13,22 @@ export function AdminHomeForm({ initialImages }: Props) {
   const [images, setImages] = useState<HomeImage[]>(initialImages);
   const [newUrl, setNewUrl] = useState("");
   const [state, formAction, pending] = useActionState(updateHomeImagesAction, initial);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const result = await postAdminImageUpload(file, () => {});
+      if (result.ok) {
+        setImages((prev) => [...prev, { url: result.url, link: "" }]);
+      }
+    }
+    setUploading(false);
+    if (fileRef.current) fileRef.current.value = "";
+  };
 
   const addImage = () => {
     const url = newUrl.trim();
@@ -96,13 +113,30 @@ export function AdminHomeForm({ initialImages }: Props) {
         ))}
       </div>
 
-      <div className="flex gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={(e) => handleFileUpload(e.target.files)}
+          className="hidden"
+        />
+        <button
+          type="button"
+          disabled={uploading}
+          onClick={() => fileRef.current?.click()}
+          className="rounded-lg border border-dashed border-neutral-300 px-3 py-2 text-sm text-neutral-500 transition-colors hover:border-neutral-400 hover:text-neutral-700 disabled:opacity-50"
+        >
+          {uploading ? "업로드 중…" : "파일 선택"}
+        </button>
+        <span className="text-xs text-neutral-400">또는</span>
         <input
           type="text"
           value={newUrl}
           onChange={(e) => setNewUrl(e.target.value)}
-          placeholder="이미지 URL 입력"
-          className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900"
+          placeholder="URL 직접 입력"
+          className="min-w-[200px] flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900"
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
@@ -113,7 +147,7 @@ export function AdminHomeForm({ initialImages }: Props) {
         <button
           type="button"
           onClick={addImage}
-          className="rounded-lg bg-neutral-200 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-300"
+          className="rounded-lg bg-neutral-200 px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-300"
         >
           추가
         </button>

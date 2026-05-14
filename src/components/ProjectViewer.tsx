@@ -83,9 +83,9 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
   );
 
   return (
-    <div className="relative flex h-[calc(100vh-72px)] w-full flex-col bg-[#f5f5f3]">
+    <div className="relative h-[calc(100vh-72px)] w-full bg-[#f5f5f3] md:-mt-[72px] md:h-screen md:bg-transparent">
       {/* Image area with vertical swiper for project navigation */}
-      <div className="relative flex-1 overflow-hidden">
+      <div className="relative h-full overflow-hidden">
         <Swiper
           modules={[Mousewheel]}
           direction="vertical"
@@ -117,7 +117,7 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
                     >
                       {projImages.map((url, i) => (
                         <SwiperSlide key={url + i} className="!flex items-center justify-center">
-                          <div className="relative h-full w-[86%] md:w-[80%]">
+                          <div className="relative h-full max-h-[90vh] w-[86%] md:w-[80%]">
                             <R2Image
                               src={url}
                               alt={proj.title}
@@ -141,11 +141,11 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
           ))}
         </Swiper>
 
-        {/* Left arrow – PC only */}
+        {/* Left nav zone – PC only */}
         {total > 1 && !showContent && (
           <button
             type="button"
-            className="group absolute left-[50px] top-1/2 z-10 hidden -translate-y-1/2 cursor-pointer md:block"
+            className="group absolute left-0 top-0 z-10 hidden h-full w-[10%] cursor-pointer items-center justify-center md:flex"
             onClick={() => imageSwiperRef.current?.slidePrev()}
             aria-label="이전 이미지"
           >
@@ -156,11 +156,11 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
           </button>
         )}
 
-        {/* Right arrow – PC only */}
+        {/* Right nav zone – PC only */}
         {total > 1 && !showContent && (
           <button
             type="button"
-            className="group absolute right-[50px] top-1/2 z-10 hidden -translate-y-1/2 cursor-pointer md:block"
+            className="group absolute right-0 top-0 z-10 hidden h-full w-[10%] cursor-pointer items-center justify-center md:flex"
             onClick={() => imageSwiperRef.current?.slideNext()}
             aria-label="다음 이미지"
           >
@@ -200,8 +200,8 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
         </div>
       </div>
 
-      {/* Bottom bar: title + paging – fixed outside vertical swiper */}
-      <div className="flex items-center justify-between px-6 py-6 md:px-10 md:py-8">
+      {/* Bottom bar: title + paging — overlaid on PC */}
+      <div className="absolute bottom-0 left-0 right-0 z-40 flex items-center justify-between bg-[#f5f5f3] px-6 py-6 md:bg-transparent md:px-10 md:py-8">
         <button
           type="button"
           className={`text-[0.9375rem] font-medium tracking-tight text-neutral-900 ${

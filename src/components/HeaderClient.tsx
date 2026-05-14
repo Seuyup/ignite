@@ -1,43 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import type { NavItem } from "@/lib/navigation";
+
+const SCROLL_THRESHOLD = 10;
 
 type Props = { navItems: NavItem[] };
 
 export function HeaderClient({ navItems }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (menuOpen || window.innerWidth >= 768) {
+        setHidden(false);
+        lastScrollY.current = y;
+        return;
+      }
+      if (y > lastScrollY.current + SCROLL_THRESHOLD) {
+        setHidden(true);
+      } else if (y < lastScrollY.current - SCROLL_THRESHOLD) {
+        setHidden(false);
+      }
+      lastScrollY.current = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (menuOpen) setHidden(false);
+  }, [menuOpen]);
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-50">
-      <div className="flex items-center justify-between px-6 py-5 md:px-10">
-        <Link
-          href="/"
-          className="relative z-[60] text-[1.5rem] font-medium tracking-tight text-neutral-900"
-          onClick={() => setMenuOpen(false)}
-        >
-          IGNITE
-        </Link>
-        <button
-          type="button"
-          className={`header__toggle relative z-[60] flex h-8 w-8 items-center justify-center ${menuOpen ? "active" : ""}`}
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label={menuOpen ? "메뉴 닫기" : "메뉴 열기"}
-          aria-expanded={menuOpen}
-        >
-          {menuOpen ? (
-            <svg className="h-6 w-6" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1">
-              <path d="M2 2L14 14M14 2L2 14" />
-            </svg>
-          ) : (
-            <svg className="h-6 w-6" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1">
-              <path d="M1 6.3H15M1 9.7H15" />
-            </svg>
-          )}
-        </button>
-      </div>
-
+    <>
+      {/* Fullscreen menu overlay — outside header to avoid transform context */}
       <div
         className={`header__menu fixed inset-0 z-50 bg-[#f5f5f3] transition-all duration-500 ${
           menuOpen
@@ -57,7 +58,40 @@ export function HeaderClient({ navItems }: Props) {
           </ul>
         </nav>
       </div>
-    </header>
+
+      <header
+        className={`fixed left-0 right-0 top-0 z-[55] bg-[#f5f5f3] md:bg-transparent transition-transform duration-300 ${
+          hidden && !menuOpen ? "-translate-y-full" : "translate-y-0"
+        }`}
+      >
+        <div className="flex items-center justify-between px-6 py-5 md:px-10">
+          <Link
+            href="/"
+            className="relative z-[60] text-[1.5rem] font-medium tracking-tight text-neutral-900"
+            onClick={() => setMenuOpen(false)}
+          >
+            IGNITE
+          </Link>
+          <button
+            type="button"
+            className={`header__toggle relative z-[60] flex h-8 w-8 items-center justify-center ${menuOpen ? "active" : ""}`}
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label={menuOpen ? "메뉴 닫기" : "메뉴 열기"}
+            aria-expanded={menuOpen}
+          >
+            {menuOpen ? (
+              <svg className="h-6 w-6" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1">
+                <path d="M2 2L14 14M14 2L2 14" />
+              </svg>
+            ) : (
+              <svg className="h-6 w-6" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1">
+                <path d="M1 6.3H15M1 9.7H15" />
+              </svg>
+            )}
+          </button>
+        </div>
+      </header>
+    </>
   );
 }
 
