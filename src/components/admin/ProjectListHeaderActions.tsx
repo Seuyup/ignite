@@ -1,8 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export function ProjectListHeaderActions({ trashCount }: { trashCount: number }) {
+  const searchParams = useSearchParams();
+  const category = searchParams.get("category") ?? "";
+
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
       <Link
@@ -33,10 +37,10 @@ export function ProjectListHeaderActions({ trashCount }: { trashCount: number })
         ) : null}
       </Link>
       <Link
-        href="/admin/projects/add"
+        href={`/admin/projects/add${category ? `?category=${category}` : ""}`}
         className="inline-flex h-[38px] items-center justify-center rounded-lg bg-neutral-900 px-4 text-sm text-white transition-opacity hover:opacity-90"
       >
-        프로젝트 추가
+        추가
       </Link>
     </div>
   );

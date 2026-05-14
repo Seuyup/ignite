@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import { SiteFooter } from "@/components/SiteFooter";
+import { DM_Sans } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
 
-const inter = Inter({
+const dmSans = DM_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
+  weight: ["300", "400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
     template: "%s — ignite",
   },
   description:
-    "WE MAY SEE THE SAME THING but WE THINK DIFFERENTLY — architecture and spatial design studio framework.",
+    "WE MAY SEE THE SAME THING but WE THINK DIFFERENTLY — architecture and spatial design studio.",
 };
 
 export default function RootLayout({
@@ -25,16 +26,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={inter.variable}>
-      <body className="min-h-screen font-sans antialiased">
-        <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-neutral-900 focus:px-3 focus:py-2 focus:text-xs focus:text-white focus:outline-none"
-        >
-          본문으로 건너뛰기
-        </a>
+    <html lang="ko" className={dmSans.variable}>
+      <body className="min-h-screen bg-[#f5f5f3] font-sans antialiased">
         <SiteHeader />
-        <main id="main">{children}</main>
+        <main id="main" className="pt-[72px]">
+          {children}
+        </main>
         <SiteFooter />
       </body>
     </html>

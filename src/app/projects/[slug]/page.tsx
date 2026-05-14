@@ -1,95 +1,102 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { R2Image } from "@/components/R2Image";
+import { ProjectViewer } from "@/components/ProjectViewer";
+import { ProjectsGrid } from "@/components/ProjectsGrid";
 import {
   getProjectBySlug,
-  getProjectSlugsForStaticParams,
+  getProjectsByMenuId,
+  getAdjacentProjects,
 } from "@/lib/project-queries";
-import { ProseHtmlWithImageLightbox } from "@/components/ProseHtmlWithImageLightbox";
-import { sanitizeRichHtml } from "@/lib/sanitize-html";
+import { getProjectCategories } from "@/lib/ignite-data";
 
 type Props = { params: Promise<{ slug: string }> };
 
 export const dynamic = "force-dynamic";
 
-export async function generateStaticParams() {
-  const slugs = await getProjectSlugsForStaticParams();
-  return slugs.map((slug) => ({ slug }));
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
+
+  const categories = await getProjectCategories();
+  const category = categories.find((c) => c.type === slug);
+  if (category) {
+    return { title: category.label };
+  }
+
   const project = await getProjectBySlug(slug);
   if (!project) return { title: "Project" };
-  const title = project.subtitle
-    ? `${project.title} — ${project.subtitle}`
-    : project.title;
-  return { title };
+  return { title: project.title };
 }
 
-export default async function ProjectDetailPage({ params }: Props) {
+export default async function ProjectSlugPage({ params }: Props) {
   const { slug } = await params;
+
+  const categories = await getProjectCategories();
+  const category = categories.find((c) => c.type === slug);
+
+  if (category) {
+    const projects = await getProjectsByMenuId(category.id);
+    return (
+      <div className="min-h-[calc(100vh-72px)]">
+        {/* Mobile: category nav at top (vertical) */}
+        <nav className="space-y-1 px-6 pt-8 md:hidden">
+          {categories.map((cat) => (
+            <Link
+              key={cat.id}
+              href={`/projects/${cat.type}`}
+              className={`block text-sm font-medium text-neutral-900 transition-colors ${
+                cat.type === slug
+                  ? "underline underline-offset-4"
+                  : "hover:underline hover:underline-offset-4"
+              }`}
+            >
+              {cat.label}
+            </Link>
+          ))}
+        </nav>
+
+        {/* Desktop: left 200px | center | right 200px */}
+        <div className="flex">
+          {/* Left - category nav (desktop) */}
+          <div className="hidden w-[230px] flex-shrink-0 md:block">
+            <nav className="fixed top-1/2 left-[90px] z-30 -translate-y-1/2 space-y-1">
+              {categories.map((cat) => (
+                <Link
+                  key={cat.id}
+                  href={`/projects/${cat.type}`}
+                  className={`block text-sm font-medium text-neutral-900 transition-colors ${
+                    cat.type === slug
+                      ? "underline underline-offset-4"
+                      : "hover:underline hover:underline-offset-4"
+                  }`}
+                >
+                  {cat.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          {/* Center - project grid */}
+          <div className="flex-1 px-6 py-10 md:px-0 md:py-24">
+            <ProjectsGrid projects={projects} />
+          </div>
+
+          {/* Right - empty space (desktop) */}
+          <div className="hidden w-[230px] flex-shrink-0 md:block" />
+        </div>
+      </div>
+    );
+  }
+
   const project = await getProjectBySlug(slug);
   if (!project) notFound();
 
-  const rawHtml = project.contentHtml ?? "";
-  const safeHtml = sanitizeRichHtml(rawHtml);
-  const textOnly = safeHtml.replace(/<[^>]*>/g, "").trim();
-  const hasRichBody = textOnly.length > 0 || /<img\b/i.test(safeHtml);
-  const cover = project.coverImageUrl?.trim();
+  const adjacent = await getAdjacentProjects(slug, project.menu_id);
 
   return (
-    <article className="mx-auto max-w-6xl px-6 py-16 md:py-24">
-      <Link
-        href="/projects"
-        className="text-xs uppercase tracking-[0.14em] text-neutral-500 transition-colors hover:text-neutral-900"
-      >
-        ← project
-      </Link>
-
-      {cover ? (
-        <div className="relative mt-8 aspect-[21/10] max-h-[min(70vh,520px)] w-full overflow-hidden rounded-2xl bg-neutral-100 md:aspect-[2.5/1]">
-          <R2Image
-            src={cover}
-            alt=""
-            mode="fill"
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 1152px"
-            priority
-          />
-        </div>
-      ) : null}
-
-      <header
-        className={`border-b border-neutral-200 pb-12 ${cover ? "mt-10" : "mt-8"}`}
-      >
-        <h1 className="text-3xl font-medium tracking-tight text-neutral-900 md:text-4xl">
-          {project.title}
-        </h1>
-        {project.subtitle ? (
-          <p className="mt-3 text-sm uppercase tracking-tagline text-neutral-500 md:text-base">
-            {project.subtitle}
-          </p>
-        ) : null}
-      </header>
-      {hasRichBody ? (
-        <ProseHtmlWithImageLightbox
-          html={safeHtml}
-          className="prose prose-neutral mt-12 max-w-none prose-headings:font-medium prose-headings:tracking-tight prose-p:text-neutral-600 prose-a:text-neutral-900 prose-img:rounded prose-img:border prose-img:border-neutral-200"
-        />
-      ) : cover ? (
-        <p className="mt-10 max-w-2xl text-sm leading-relaxed text-neutral-600 md:text-base">
-          본문은 관리자에서 추가할 수 있습니다.
-        </p>
-      ) : (
-        <>
-          <div className="mt-12 aspect-[16/10] w-full bg-neutral-100" aria-hidden />
-          <p className="mt-8 max-w-2xl text-sm leading-relaxed text-neutral-600 md:text-base">
-            프로젝트 상세 영역입니다. 관리자에서 본문을 추가하면 여기에 표시됩니다.
-          </p>
-        </>
-      )}
-    </article>
+    <ProjectViewer
+      project={project}
+      adjacentProjects={adjacent}
+    />
   );
 }

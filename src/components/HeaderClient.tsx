@@ -1,0 +1,124 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import type { NavItem } from "@/lib/navigation";
+
+type Props = { navItems: NavItem[] };
+
+export function HeaderClient({ navItems }: Props) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  return (
+    <header className="fixed left-0 right-0 top-0 z-50">
+      <div className="flex items-center justify-between px-6 py-5 md:px-10">
+        <Link
+          href="/"
+          className="relative z-[60] text-[1.5rem] font-medium tracking-tight text-neutral-900"
+          onClick={() => setMenuOpen(false)}
+        >
+          IGNITE
+        </Link>
+        <button
+          type="button"
+          className={`header__toggle relative z-[60] flex h-8 w-8 items-center justify-center ${menuOpen ? "active" : ""}`}
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label={menuOpen ? "메뉴 닫기" : "메뉴 열기"}
+          aria-expanded={menuOpen}
+        >
+          {menuOpen ? (
+            <svg className="h-6 w-6" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1">
+              <path d="M2 2L14 14M14 2L2 14" />
+            </svg>
+          ) : (
+            <svg className="h-6 w-6" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1">
+              <path d="M1 6.3H15M1 9.7H15" />
+            </svg>
+          )}
+        </button>
+      </div>
+
+      <div
+        className={`header__menu fixed inset-0 z-50 bg-[#f5f5f3] transition-all duration-500 ${
+          menuOpen
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
+        }`}
+      >
+        <nav className="flex h-full flex-col px-10 pt-[25vh] md:px-20">
+          <ul className="space-y-4">
+            {navItems.map((item) => (
+              <NavMenuItem
+                key={item.label}
+                item={item}
+                onNavigate={() => setMenuOpen(false)}
+              />
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+function NavMenuItem({
+  item,
+  onNavigate,
+}: {
+  item: NavItem;
+  onNavigate: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const hasChildren = item.children && item.children.length > 0;
+
+  if (!hasChildren) {
+    return (
+      <li>
+        <Link
+          href={item.href}
+          className="text-xl font-medium tracking-tight text-neutral-700 transition-colors hover:text-neutral-900 hover:underline hover:underline-offset-4 md:text-2xl"
+          onClick={onNavigate}
+        >
+          {item.label}
+        </Link>
+      </li>
+    );
+  }
+
+  return (
+    <li>
+      <button
+        type="button"
+        className={`text-xl font-medium tracking-tight transition-colors hover:text-neutral-900 md:text-2xl ${
+          expanded
+            ? "text-neutral-900 underline underline-offset-4"
+            : "text-neutral-700 hover:underline hover:underline-offset-4"
+        }`}
+        onClick={() => setExpanded(!expanded)}
+        aria-expanded={expanded}
+      >
+        {item.label}
+      </button>
+      <ul
+        className={`overflow-hidden pl-16 transition-all duration-300 ${
+          expanded ? "mt-3 max-h-96 space-y-4 opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        {item.children!.map((child) => (
+          <li key={child.href}>
+            <Link
+              href={child.href}
+              className="text-xl font-medium tracking-tight text-neutral-700 transition-colors hover:text-neutral-900 hover:underline hover:underline-offset-4 md:text-2xl"
+              onClick={() => {
+                setExpanded(false);
+                onNavigate();
+              }}
+            >
+              {child.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </li>
+  );
+}

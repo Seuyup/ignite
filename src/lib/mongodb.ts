@@ -20,6 +20,28 @@ if (process.env.NODE_ENV !== "production") {
   globalWithMongoose.__igniteMongoose = cached;
 }
 
+let indexesCleaned = false;
+
+async function cleanBadIndexes(): Promise<void> {
+  if (indexesCleaned) return;
+  indexesCleaned = true;
+  try {
+    const db = mongoose.connection.db;
+    if (!db) return;
+    const listCollection = db.collection("list");
+    const indexes = await listCollection.indexes();
+    const badIndex = indexes.find(
+      (idx) => idx.name === "menu_id_1" && idx.unique === true,
+    );
+    if (badIndex) {
+      await listCollection.dropIndex("menu_id_1");
+      console.log("[mongodb] dropped bad unique index: menu_id_1 on list");
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 export async function connectDB(): Promise<typeof mongoose> {
   if (!MONGODB_URI) {
     throw new Error(
@@ -31,5 +53,6 @@ export async function connectDB(): Promise<typeof mongoose> {
     cached.promise = mongoose.connect(MONGODB_URI);
   }
   cached.conn = await cached.promise;
+  await cleanBadIndexes();
   return cached.conn;
 }

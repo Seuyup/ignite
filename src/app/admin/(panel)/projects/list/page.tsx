@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { ProjectListHeaderActions } from "@/components/admin/ProjectListHeaderActions";
@@ -6,6 +7,7 @@ import {
   countTrashedProjects,
   listProjectsPaginated,
 } from "@/lib/admin-project-queries";
+import { getProjectCategories } from "@/lib/ignite-data";
 
 export const metadata = {
   title: "프로젝트 목록",
@@ -18,22 +20,31 @@ function parseIntSafe(v: string | undefined, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
-function buildQuery(page: number, limit: number, q: string): string {
+function buildQuery(page: number, limit: number, q: string, category?: string): string {
   const p = new URLSearchParams();
   p.set("page", String(page));
   p.set("limit", String(limit));
   if (q.trim()) p.set("q", q.trim());
+  if (category) p.set("category", category);
   const s = p.toString();
   return s ? `?${s}` : "";
 }
 
 type Props = {
-  searchParams: Promise<{ page?: string; limit?: string; q?: string }>;
+  searchParams: Promise<{ page?: string; limit?: string; q?: string; category?: string }>;
 };
 
 export default async function AdminProjectListPage({ searchParams }: Props) {
   const sp = await searchParams;
   const q = sp.q ?? "";
+  let category = sp.category ?? "";
+
+  if (!category) {
+    const categories = await getProjectCategories();
+    if (categories.length > 0) {
+      redirect(`/admin/projects/list?category=${categories[0].id}`);
+    }
+  }
   let limit = parseIntSafe(sp.limit, 10);
   if (!LIMITS.includes(limit as (typeof LIMITS)[number])) limit = 10;
   const page = Math.max(1, parseIntSafe(sp.page, 1));
@@ -43,12 +54,13 @@ export default async function AdminProjectListPage({ searchParams }: Props) {
       page,
       limit,
       search: q,
+      menu_id: category || undefined,
     }),
     countTrashedProjects(),
   ]);
 
   const base = "/admin/projects/list";
-  const buildHref = (p: number) => `${base}${buildQuery(p, limit, q)}`;
+  const buildHref = (p: number) => `${base}${buildQuery(p, limit, q, category)}`;
 
   if (!result.ok) {
     return (
@@ -70,14 +82,20 @@ export default async function AdminProjectListPage({ searchParams }: Props) {
 
   const { items, total, page: safePage, totalPages } = result;
 
+  const categories = await getProjectCategories();
+  const matchedCat = categories.find((c) => c.id === category);
+  const categoryLabel = matchedCat
+    ? matchedCat.type.charAt(0).toUpperCase() + matchedCat.type.slice(1)
+    : "전체";
+
   return (
     <div>
       <div>
         <h1 className="text-2xl font-medium tracking-tight text-neutral-900 md:text-3xl">
-          프로젝트
+          {categoryLabel}
         </h1>
         <p className="mt-2 text-sm text-neutral-500">
-          등록된 프로젝트를 검색·페이지 단위로 확인합니다. 순서 열의 이동
+          등록된 리스트를 검색·페이지 단위로 확인합니다. 순서 열의 이동
           아이콘을 드래그해 순서를 맞춘 뒤, 목록 위쪽의{" "}
           <strong className="font-medium text-neutral-700">순서 저장</strong>
           으로 공개 목록 반영 순서를 적용합니다.
@@ -91,6 +109,7 @@ export default async function AdminProjectListPage({ searchParams }: Props) {
       >
         <input type="hidden" name="page" value="1" />
         <input type="hidden" name="limit" value={String(limit)} />
+        {category && <input type="hidden" name="category" value={category} />}
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
           <div className="min-w-[200px] flex-1">
             <label
@@ -130,10 +149,10 @@ export default async function AdminProjectListPage({ searchParams }: Props) {
             새 프로젝트를 추가하면 목록에 표시됩니다.
           </p>
           <Link
-            href="/admin/projects/add"
+            href={`/admin/projects/add${category ? `?category=${category}` : ""}`}
             className="mt-6 inline-block rounded-lg bg-neutral-900 px-4 py-2 text-sm text-white transition-opacity hover:opacity-90"
           >
-            프로젝트 추가
+            추가
           </Link>
         </div>
         </>
@@ -154,6 +173,7 @@ export default async function AdminProjectListPage({ searchParams }: Props) {
       >
         <input type="hidden" name="q" value={q} />
         <input type="hidden" name="page" value="1" />
+        {category && <input type="hidden" name="category" value={category} />}
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
           <div className="flex flex-wrap items-end gap-3">
             <div>

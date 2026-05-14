@@ -24,7 +24,24 @@ body {
   }
 }
 
-/* Tiptap / ProseMirror (관리자 편집기) */
+/* Tiptap / ProseMirror */
 .ProseMirror:focus {
   outline: none;
+}
+
+/* Fullscreen menu transitions */
+.header__menu {
+  will-change: opacity;
+}
+
+.header__toggle.active span:first-child {
+  transform: rotate(45deg) translate(2px, 2px);
+}
+
+.header__toggle.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.header__toggle.active span:last-child {
+  transform: rotate(-45deg) translate(2px, -2px);
 }

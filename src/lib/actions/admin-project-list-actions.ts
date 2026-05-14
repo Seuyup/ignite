@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/admin-guard";
 import { connectDB } from "@/lib/mongodb";
-import { Project } from "@/lib/models/Project";
+import { List as Project } from "@/lib/models/List";
 import { isSlugTakenByActiveProject } from "@/lib/admin-project-queries";
 import mongoose from "mongoose";
 

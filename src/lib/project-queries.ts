@@ -1,39 +1,29 @@
-import type { Project } from "@/lib/projects";
-import { featuredProjects } from "@/lib/projects";
+import type { Project, ProjectDetail } from "@/lib/projects";
 import { connectDB } from "@/lib/mongodb";
-import { Project as ProjectModel } from "@/lib/models/Project";
+import { List as ProjectModel } from "@/lib/models/List";
 
 const ACTIVE = { deletedAt: null } as const;
 
-export type ProjectDetail = Project & {
-  contentHtml?: string;
-};
+type DocLean = Record<string, unknown>;
 
-function mapDoc(p: {
-  title: string;
-  subtitle?: string | null;
-  slug: string;
-  coverImageUrl?: string | null;
-}): Project {
-  const cover = p.coverImageUrl?.trim();
+function mapDoc(d: DocLean): Project {
+  const cover = (d.coverImageUrl as string | undefined)?.trim();
   return {
-    title: p.title,
-    subtitle: p.subtitle ?? undefined,
-    slug: p.slug,
+    title: d.title as string,
+    sub_title_1: (d.sub_title_1 as string) ?? "",
+    sub_title_2: (d.sub_title_2 as string) ?? "",
+    slug: d.slug as string,
+    menu_id: (d.menu_id as string) ?? "",
+    images: Array.isArray(d.images) ? d.images : [],
+    meta: Array.isArray(d.meta) ? d.meta : [],
     ...(cover ? { coverImageUrl: cover } : {}),
   };
 }
 
-function mapDocDetail(p: {
-  title: string;
-  subtitle?: string | null;
-  slug: string;
-  contentHtml?: string | null;
-  coverImageUrl?: string | null;
-}): ProjectDetail {
+function mapDocDetail(d: DocLean): ProjectDetail {
   return {
-    ...mapDoc(p),
-    contentHtml: p.contentHtml ?? "",
+    ...mapDoc(d),
+    id: (d._id as { toString(): string }).toString(),
   };
 }
 
@@ -43,51 +33,66 @@ export async function getProjectsForPublic(): Promise<Project[]> {
     const docs = await ProjectModel.find(ACTIVE)
       .sort({ sortOrder: 1, createdAt: -1 })
       .lean();
-    if (docs.length > 0) {
-      return docs.map((d) =>
-        mapDoc({
-          title: d.title,
-          subtitle: d.subtitle,
-          slug: d.slug,
-          coverImageUrl: d.coverImageUrl,
-        }),
-      );
-    }
+    return docs.map(mapDoc);
   } catch {
-    /* Mongo 미설정·연결 실패 시 정적 데이터 사용 */
+    return [];
   }
-  return featuredProjects;
 }
 
-export async function getProjectBySlug(slug: string): Promise<ProjectDetail | null> {
+export async function getProjectsByMenuId(
+  menuId: string,
+): Promise<Project[]> {
+  try {
+    await connectDB();
+    const docs = await ProjectModel.find({ ...ACTIVE, menu_id: menuId })
+      .sort({ sortOrder: 1, createdAt: -1 })
+      .lean();
+    return docs.map(mapDoc);
+  } catch {
+    return [];
+  }
+}
+
+export async function getProjectBySlug(
+  slug: string,
+): Promise<ProjectDetail | null> {
   try {
     await connectDB();
     const doc = await ProjectModel.findOne({ slug, ...ACTIVE }).lean();
-    if (doc) {
-      return mapDocDetail({
-        title: doc.title,
-        subtitle: doc.subtitle,
-        slug: doc.slug,
-        contentHtml: doc.contentHtml,
-        coverImageUrl: doc.coverImageUrl,
-      });
-    }
+    if (doc) return mapDocDetail(doc);
   } catch {
     /* fall through */
   }
-  const fallback = featuredProjects.find((p) => p.slug === slug);
-  return fallback
-    ? { ...fallback, contentHtml: "", coverImageUrl: fallback.coverImageUrl }
-    : null;
+  return null;
 }
 
 export async function getProjectSlugsForStaticParams(): Promise<string[]> {
   try {
     await connectDB();
     const docs = await ProjectModel.find(ACTIVE).select("slug").lean();
-    if (docs.length > 0) return docs.map((d) => d.slug);
+    return docs.map((d) => (d as DocLean).slug as string);
   } catch {
-    /* fallback */
+    return [];
   }
-  return featuredProjects.map((p) => p.slug);
+}
+
+export async function getAdjacentProjects(
+  slug: string,
+  menuId: string,
+): Promise<{ prev: ProjectDetail | null; next: ProjectDetail | null }> {
+  try {
+    await connectDB();
+    const docs = await ProjectModel.find({ ...ACTIVE, menu_id: menuId })
+      .sort({ sortOrder: 1, createdAt: -1 })
+      .lean();
+
+    const idx = docs.findIndex((d: any) => d.slug === slug);
+    if (idx === -1) return { prev: null, next: null };
+
+    const prev = idx > 0 ? mapDocDetail(docs[idx - 1]) : null;
+    const next = idx < docs.length - 1 ? mapDocDetail(docs[idx + 1]) : null;
+    return { prev, next };
+  } catch {
+    return { prev: null, next: null };
+  }
 }

@@ -1,5 +1,5 @@
 import { connectDB } from "@/lib/mongodb";
-import { Project } from "@/lib/models/Project";
+import { List as Project } from "@/lib/models/List";
 import type {
   AdminProjectEditPayload,
   AdminProjectRow,
@@ -26,16 +26,6 @@ export type ListProjectsResult =
     }
   | { ok: false; detail: string };
 
-function formatCaughtError(e: unknown): string {
-  if (!(e instanceof Error)) return String(e);
-  const parts = [e.message];
-  if (process.env.NODE_ENV === "development" && e.stack) {
-    parts.push("", e.stack);
-  }
-  return parts.join("\n");
-}
-
-/** 기존 문서에 sortOrder·deletedAt 기본값 채우기 (요청당 1회 수준으로 호출) */
 async function ensureProjectListFields(): Promise<void> {
   await Project.updateMany(
     { deletedAt: { $exists: false } },
@@ -60,7 +50,6 @@ async function ensureProjectListFields(): Promise<void> {
   );
 }
 
-/** 관리자 수정 폼용: slug로 활성 프로젝트만 조회 */
 export async function getProjectForEditBySlug(
   slug: string,
 ): Promise<AdminProjectEditPayload | null> {
@@ -71,12 +60,15 @@ export async function getProjectForEditBySlug(
   const doc = await Project.findOne({ slug: normalized, ...ACTIVE }).lean();
   if (!doc) return null;
   return {
-    id: String(doc._id),
-    title: doc.title,
-    subtitle: doc.subtitle ?? "",
-    slug: doc.slug,
-    contentHtml: doc.contentHtml ?? "",
-    coverImageUrl: doc.coverImageUrl?.trim() ?? "",
+    id: String((doc as any)._id),
+    title: (doc as any).title,
+    sub_title_1: (doc as any).sub_title_1 ?? "",
+    sub_title_2: (doc as any).sub_title_2 ?? "",
+    slug: (doc as any).slug,
+    menu_id: (doc as any).menu_id ? String((doc as any).menu_id) : "",
+    images: Array.isArray((doc as any).images) ? (doc as any).images : [],
+    coverImageUrl: (doc as any).coverImageUrl?.trim() ?? "",
+    meta: Array.isArray((doc as any).meta) ? (doc as any).meta : [],
   };
 }
 
@@ -84,18 +76,22 @@ export async function listProjectsPaginated(options: {
   page: number;
   limit: number;
   search?: string;
+  menu_id?: string;
 }): Promise<ListProjectsResult> {
   try {
     await connectDB();
     await ensureProjectListFields();
 
-    const { page, limit, search } = options;
+    const { page, limit, search, menu_id } = options;
     const requestedPage = Math.max(1, page);
     const safeLimit = LIMIT_OPTIONS.includes(limit as (typeof LIMIT_OPTIONS)[number])
       ? limit
       : 10;
 
     const filter: Record<string, unknown> = { ...ACTIVE };
+    if (menu_id && menu_id.trim()) {
+      filter.menu_id = menu_id.trim();
+    }
     if (search && search.trim()) {
       filter.title = { $regex: escapeRegex(search.trim()), $options: "i" };
     }
@@ -109,13 +105,14 @@ export async function listProjectsPaginated(options: {
       .sort({ sortOrder: 1, createdAt: -1 })
       .skip(skip)
       .limit(safeLimit)
-      .select("title slug createdAt updatedAt coverImageUrl")
+      .select("title slug menu_id createdAt updatedAt coverImageUrl")
       .lean();
 
-    const items: AdminProjectRow[] = rawItems.map((d) => ({
+    const items: AdminProjectRow[] = rawItems.map((d: any) => ({
       id: String(d._id),
       title: d.title,
       slug: d.slug,
+      menu_id: d.menu_id ?? "",
       createdAt: d.createdAt ? new Date(d.createdAt) : new Date(0),
       updatedAt: d.updatedAt ? new Date(d.updatedAt) : undefined,
       coverImageUrl: d.coverImageUrl?.trim() || undefined,
@@ -123,7 +120,8 @@ export async function listProjectsPaginated(options: {
 
     return { ok: true, items, total, page: safePage, totalPages };
   } catch (e: unknown) {
-    return { ok: false, detail: formatCaughtError(e) };
+    const msg = e instanceof Error ? e.message : String(e);
+    return { ok: false, detail: msg };
   }
 }
 
@@ -137,7 +135,6 @@ export type ListTrashedResult =
     }
   | { ok: false; detail: string };
 
-/** 휴지통(소프트 삭제) 목록 */
 export async function listTrashedProjectsPaginated(options: {
   page: number;
   limit: number;
@@ -163,13 +160,14 @@ export async function listTrashedProjectsPaginated(options: {
       .sort({ deletedAt: -1 })
       .skip(skip)
       .limit(safeLimit)
-      .select("title slug createdAt updatedAt coverImageUrl")
+      .select("title slug menu_id createdAt updatedAt coverImageUrl")
       .lean();
 
-    const items: AdminProjectRow[] = rawItems.map((d) => ({
+    const items: AdminProjectRow[] = rawItems.map((d: any) => ({
       id: String(d._id),
       title: d.title,
       slug: d.slug,
+      menu_id: d.menu_id ?? "",
       createdAt: d.createdAt ? new Date(d.createdAt) : new Date(0),
       updatedAt: d.updatedAt ? new Date(d.updatedAt) : undefined,
       coverImageUrl: d.coverImageUrl?.trim() || undefined,
@@ -177,7 +175,8 @@ export async function listTrashedProjectsPaginated(options: {
 
     return { ok: true, items, total, page: safePage, totalPages };
   } catch (e: unknown) {
-    return { ok: false, detail: formatCaughtError(e) };
+    const msg = e instanceof Error ? e.message : String(e);
+    return { ok: false, detail: msg };
   }
 }
 
@@ -186,13 +185,11 @@ export async function countTrashedProjects(): Promise<number> {
   return Project.countDocuments({ deletedAt: { $ne: null } });
 }
 
-/** 활성 프로젝트 slug 중복 여부 (수정 시 자기 자신 제외) */
 export async function isSlugTakenByActiveProject(
   slug: string,
   excludeId?: string,
 ): Promise<boolean> {
   await connectDB();
-  await ensureProjectListFields();
   const s = slug.trim().toLowerCase();
   if (!s) return true;
   const q: Record<string, unknown> = { slug: s, ...ACTIVE };
@@ -228,18 +225,13 @@ export async function reorderProjectsOnPage(options: {
       .sort({ sortOrder: 1, createdAt: -1 })
       .select("_id")
       .lean();
-    const fullIds = full.map((d) => String(d._id));
+    const fullIds = full.map((d: any) => String(d._id));
     const start = (safePage - 1) * safeLimit;
     const end = start + safeLimit;
     const pageSlice = fullIds.slice(start, end);
 
     if (orderedIds.length !== pageSlice.length) {
       return { ok: false, error: "순서 정보가 목록과 일치하지 않습니다." };
-    }
-    const a = new Set(pageSlice);
-    const b = new Set(orderedIds);
-    if (a.size !== b.size || [...a].some((id) => !b.has(id))) {
-      return { ok: false, error: "순서 변경 대상 행이 현재 페이지와 다릅니다." };
     }
 
     const merged = [...fullIds.slice(0, start), ...orderedIds, ...fullIds.slice(end)];

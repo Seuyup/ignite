@@ -2,15 +2,17 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <div className="mx-auto max-w-6xl px-6 py-24 text-center">
-      <h1 className="text-2xl font-medium text-neutral-900">404</h1>
-      <p className="mt-4 text-sm text-neutral-600">페이지를 찾을 수 없습니다.</p>
+    <section className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
+      <h1 className="text-6xl font-light text-neutral-900">404</h1>
+      <p className="mt-4 text-sm text-neutral-500">
+        페이지를 찾을 수 없습니다.
+      </p>
       <Link
         href="/"
-        className="mt-8 inline-block text-xs uppercase tracking-[0.14em] text-neutral-500 underline-offset-4 hover:text-neutral-900 hover:underline"
+        className="mt-8 rounded-lg bg-neutral-900 px-4 py-2 text-sm text-white transition-opacity hover:opacity-90"
       >
-        홈으로
+        홈으로 돌아가기
       </Link>
-    </div>
+    </section>
   );
 }

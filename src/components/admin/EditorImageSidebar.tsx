@@ -1,10 +1,33 @@
 "use client";
 
-import {
-  extractImgEntriesFromHtml,
-  removeImgAtIndexFromHtml,
-} from "@/lib/html-body-images";
 import { useCallback, useMemo } from "react";
+
+type ImgEntry = { src: string; domIndex: number };
+
+function extractImgEntriesFromHtml(html: string): ImgEntry[] {
+  const entries: ImgEntry[] = [];
+  const re = /<img[^>]*\bsrc=["']([^"']*)["'][^>]*>/gi;
+  let match: RegExpExecArray | null;
+  let idx = 0;
+  while ((match = re.exec(html)) !== null) {
+    entries.push({ src: match[1] ?? "", domIndex: idx });
+    idx++;
+  }
+  return entries;
+}
+
+function removeImgAtIndexFromHtml(html: string, domIndex: number): string {
+  const re = /<img[^>]*>/gi;
+  let match: RegExpExecArray | null;
+  let idx = 0;
+  while ((match = re.exec(html)) !== null) {
+    if (idx === domIndex) {
+      return html.slice(0, match.index) + html.slice(match.index + match[0].length);
+    }
+    idx++;
+  }
+  return html;
+}
 
 function CopyUrlIcon({ className }: { className?: string }) {
   return (
