@@ -3,11 +3,12 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
 
 import { R2Image } from "@/components/R2Image";
-import { useSlideNav, goSlidePrev, goSlideNext } from "@/hooks/useSlideNav";
+import { useSlideNav } from "@/hooks/useSlideNav";
 import type { HomeImage } from "@/lib/ignite-data";
 
 const HS_CLASSES = {
@@ -29,8 +30,6 @@ const HS_CLASSES = {
     "group/strip flex h-full w-32 shrink-0 cursor-pointer items-center justify-end border-0 bg-transparent p-0 pr-6 text-neutral-900 md:pr-10 pointer-events-auto",
 } as const;
 
-const AUTOPLAY_DELAY = 5000;
-
 type Props = { images: HomeImage[] };
 
 export function HomeSlideshow({ images }: Props) {
@@ -39,7 +38,6 @@ export function HomeSlideshow({ images }: Props) {
   const swiperShellRef = useRef<HTMLDivElement>(null);
   const [current, setCurrent] = useState(0);
   const total = images.length;
-  const autoplayTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const suppressClickRef = useRef(false);
 
@@ -52,37 +50,11 @@ export function HomeSlideshow({ images }: Props) {
     },
   });
 
-  const clearAutoplay = useCallback(() => {
-    if (autoplayTimer.current) {
-      clearTimeout(autoplayTimer.current);
-      autoplayTimer.current = null;
-    }
-  }, []);
-
-  const startAutoplay = useCallback(() => {
-    clearAutoplay();
-    if (total <= 1) return;
-    autoplayTimer.current = setTimeout(() => {
-      const sw = swiperRef.current;
-      if (sw) goSlideNext(sw, total);
-    }, AUTOPLAY_DELAY);
-  }, [total, clearAutoplay]);
-
   useEffect(() => {
     setCurrent(0);
     reset();
     swiperRef.current?.slideTo(0, 0);
-    startAutoplay();
-    return clearAutoplay;
-  }, [images, reset, startAutoplay, clearAutoplay]);
-
-  const handleSlideChange = useCallback(
-    (s: SwiperType) => {
-      setCurrent(s.activeIndex);
-      startAutoplay();
-    },
-    [startAutoplay],
-  );
+  }, [images, reset]);
 
   const handleImageClick = useCallback(() => {
     if (suppressClickRef.current) {
@@ -115,10 +87,13 @@ export function HomeSlideshow({ images }: Props) {
       >
         <div className={HS_CLASSES.swiperInner}>
           <Swiper
+            modules={[Autoplay]}
+            loop={total > 1}
             allowTouchMove={isMobile}
+            autoplay={total > 1 ? { delay: 5000, disableOnInteraction: false } : false}
             speed={800}
             onSwiper={(s) => { swiperRef.current = s; }}
-            onSlideChange={handleSlideChange}
+            onSlideChange={(s) => setCurrent(s.realIndex)}
             className="h-full w-full"
           >
             {images.map((img, i) => (
@@ -147,10 +122,7 @@ export function HomeSlideshow({ images }: Props) {
               type="button"
               data-swiper-image-nav
               className={HS_CLASSES.navHitStripBtn}
-              onClick={() => {
-                const sw = swiperRef.current;
-                if (sw) goSlidePrev(sw, total);
-              }}
+              onClick={() => swiperRef.current?.slidePrev()}
               aria-label="이전 이미지"
             >
               <svg
@@ -175,10 +147,7 @@ export function HomeSlideshow({ images }: Props) {
               type="button"
               data-swiper-image-nav
               className={HS_CLASSES.navHitStripBtnEnd}
-              onClick={() => {
-                const sw = swiperRef.current;
-                if (sw) goSlideNext(sw, total);
-              }}
+              onClick={() => swiperRef.current?.slideNext()}
               aria-label="다음 이미지"
             >
               <svg

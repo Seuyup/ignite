@@ -7,7 +7,7 @@ import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
 
 import { R2Image } from "@/components/R2Image";
-import { useSlideNav, goSlidePrev, goSlideNext } from "@/hooks/useSlideNav";
+import { useSlideNav } from "@/hooks/useSlideNav";
 import type { ProjectDetail } from "@/lib/projects";
 
 const PV_CLASSES = {
@@ -43,10 +43,10 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
 
   const imageShellRef = useRef<HTMLDivElement>(null);
   const imageSwiperRef = useRef<SwiperType | null>(null);
+  const hSwiperMapRef = useRef<Map<string, SwiperType>>(new Map());
   const vertSwiperRef = useRef<SwiperType | null>(null);
   const isTransitioning = useRef(false);
-
-  const imageIndexCacheRef = useRef<Map<string, number>>(new Map());
+  const ignoreSlideChange = useRef(false);
 
   const images = currentProject.images.length > 0
     ? currentProject.images
@@ -63,12 +63,16 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
   });
 
   useEffect(() => {
+    ignoreSlideChange.current = true;
     setCurrentProject(project);
     setAdjacent(adjacentProjects);
     setImageIndex(0);
     setShowContent(false);
     reset();
     imageSwiperRef.current?.slideTo(0, 0);
+    requestAnimationFrame(() => {
+      ignoreSlideChange.current = false;
+    });
   }, [project, adjacentProjects, reset]);
 
   // --- Vertical swiper: project navigation ---
@@ -84,8 +88,6 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
   adjacentRef.current = adjacent;
   const currentProjectRef = useRef(currentProject);
   currentProjectRef.current = currentProject;
-  const imageIndexRef = useRef(imageIndex);
-  imageIndexRef.current = imageIndex;
 
   const handleVertTransitionEnd = useCallback(
     async (swiper: SwiperType) => {
@@ -102,11 +104,7 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
       }
 
       isTransitioning.current = true;
-
-      imageIndexCacheRef.current.set(
-        currentProjectRef.current.slug,
-        imageIndexRef.current,
-      );
+      ignoreSlideChange.current = true;
 
       let newAdjacent = { prev: null as ProjectDetail | null, next: null as ProjectDetail | null };
       try {
@@ -116,18 +114,25 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
         if (res.ok) newAdjacent = await res.json();
       } catch { /* keep defaults */ }
 
-      const cachedIdx = imageIndexCacheRef.current.get(target.slug) ?? 0;
-
       setCurrentProject(target);
       setAdjacent(newAdjacent);
-      setImageIndex(cachedIdx);
+      setImageIndex(0);
       setShowContent(false);
 
       requestAnimationFrame(() => {
         const newCenterIdx = newAdjacent.prev ? 1 : 0;
         swiper.slideTo(newCenterIdx, 0);
-        imageSwiperRef.current?.slideTo(cachedIdx, 0);
+
+        const newSwiper = hSwiperMapRef.current.get(target.slug);
+        if (newSwiper) {
+          imageSwiperRef.current = newSwiper;
+          newSwiper.slideTo(0, 0);
+        }
+
         isTransitioning.current = false;
+        requestAnimationFrame(() => {
+          ignoreSlideChange.current = false;
+        });
       });
     },
     [],
@@ -170,12 +175,20 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
                     <div className={PV_CLASSES.swiperInner}>
                       <Swiper
                         nested
+                        loop={projTotal > 1}
                         allowTouchMove={isMobile}
                         observer
                         observeParents
                         speed={800}
-                        onSwiper={isActive ? (s) => { imageSwiperRef.current = s; } : undefined}
-                        onSlideChange={isActive ? (s) => setImageIndex(s.activeIndex) : undefined}
+                        onSwiper={(s) => {
+                          hSwiperMapRef.current.set(proj.slug, s);
+                          if (isActive) imageSwiperRef.current = s;
+                        }}
+                        onSlideChange={(s) => {
+                          if (!ignoreSlideChange.current && proj.slug === currentProjectRef.current.slug) {
+                            setImageIndex(s.realIndex);
+                          }
+                        }}
                         className="h-full w-full"
                       >
                         {projImages.map((url, i) => (
@@ -211,10 +224,7 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
               type="button"
               data-swiper-image-nav
               className={PV_CLASSES.navHitStripBtn}
-              onClick={() => {
-                const sw = imageSwiperRef.current;
-                if (sw) goSlidePrev(sw, total);
-              }}
+              onClick={() => imageSwiperRef.current?.slidePrev()}
               aria-label="이전 이미지"
             >
               <svg
@@ -239,10 +249,7 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
               type="button"
               data-swiper-image-nav
               className={PV_CLASSES.navHitStripBtnEnd}
-              onClick={() => {
-                const sw = imageSwiperRef.current;
-                if (sw) goSlideNext(sw, total);
-              }}
+              onClick={() => imageSwiperRef.current?.slideNext()}
               aria-label="다음 이미지"
             >
               <svg

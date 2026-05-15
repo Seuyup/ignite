@@ -20,28 +20,6 @@ function navZoneFromClient(shell: HTMLElement, clientX: number): NavEdge {
 
 type TapTrack = { pointerId: number; x: number; y: number; zone: "left" | "right" };
 
-/**
- * Swiper loop를 사용하지 않고 끝↔처음 순환.
- * slideCount를 받아 activeIndex 기준으로 직접 제어.
- */
-export function goSlidePrev(swiper: SwiperType, slideCount: number) {
-  if (slideCount <= 1) return;
-  if (swiper.activeIndex <= 0) {
-    swiper.slideTo(slideCount - 1);
-  } else {
-    swiper.slidePrev();
-  }
-}
-
-export function goSlideNext(swiper: SwiperType, slideCount: number) {
-  if (slideCount <= 1) return;
-  if (swiper.activeIndex >= slideCount - 1) {
-    swiper.slideTo(0);
-  } else {
-    swiper.slideNext();
-  }
-}
-
 export function useSlideNav(opts: {
   swiperRef: React.RefObject<SwiperType | null>;
   shellRef: React.RefObject<HTMLDivElement | null>;
@@ -152,11 +130,8 @@ export function useSlideNav(opts: {
         if (d > TAP_MOVE_MAX_PX) return;
         const upEl = ev.target;
         if (upEl instanceof Element && upEl.closest("[data-swiper-image-nav]")) return;
-        const sw = swiperRef.current;
-        if (!sw) return;
-        const n = totalRef.current;
-        if (tr.zone === "left") goSlidePrev(sw, n);
-        else goSlideNext(sw, n);
+        if (tr.zone === "left") swiperRef.current?.slidePrev();
+        else swiperRef.current?.slideNext();
         onTapNav?.();
       };
       tapPointerUpRef.current = onUp;
