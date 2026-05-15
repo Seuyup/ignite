@@ -37,7 +37,7 @@ export default async function ProjectSlugPage({ params }: Props) {
   if (category) {
     const projects = await getProjectsByMenuId(category.id);
     return (
-      <div className="min-h-[calc(100vh-72px)]">
+      <div className="min-h-[calc(100dvh-72px)]">
         {/* Mobile: category nav at top (vertical) */}
         <nav className="space-y-1 px-6 pt-8 md:hidden">
           {categories.map((cat) => (

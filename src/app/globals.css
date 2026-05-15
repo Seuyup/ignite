@@ -11,6 +11,9 @@
 
 html {
   scroll-behavior: smooth;
+  /* iOS Safari: 100vh includes the address-bar area → use dvh with vh fallback */
+  --vh-full: 100vh;
+  --vh-full: 100dvh;
 }
 
 body {

@@ -13,14 +13,14 @@ import type { HomeImage } from "@/lib/ignite-data";
 /** 모바일 / PC 분리 — ProjectViewer와 동일한 이미지 규칙 */
 const HS_CLASSES = {
   section:
-    "flex min-h-0 h-[calc(100vh-72px)] w-full flex-col bg-[#f5f5f3] md:relative md:-mt-[72px] md:h-screen md:flex-none md:bg-transparent",
+    "flex min-h-0 h-[calc(100dvh-72px)] w-full flex-col bg-[#f5f5f3] md:relative md:-mt-[72px] md:h-dvh md:flex-none md:bg-transparent",
   swiperShell:
     "relative flex-1 min-h-0 overflow-hidden md:h-full md:[&_.swiper]:!cursor-inherit",
   swiperInner: "relative h-full min-h-0 w-full",
   slide:
     "!flex items-center justify-center px-4 md:px-[10%] md:pt-[72px] md:pb-[calc(2rem+2rem+1.25rem+env(safe-area-inset-bottom,0px))]",
   imageFrame:
-    "relative h-full min-h-0 max-h-[90vh] w-[86%] md:h-full md:w-full md:max-h-full",
+    "relative h-full min-h-0 max-h-[90dvh] w-[86%] md:h-full md:w-full md:max-h-full",
   imageFit: "pointer-events-none object-contain md:!object-cover md:object-center",
   navHitOuter:
     "absolute top-0 z-20 hidden h-full items-center md:flex md:pointer-events-none md:top-[72px] md:h-auto md:bottom-[calc(2rem+2rem+1.25rem+env(safe-area-inset-bottom,0px))] md:w-[40%]",
@@ -182,7 +182,7 @@ export function HomeSlideshow({ images }: Props) {
 
   if (total === 0) {
     return (
-      <section className="flex h-[calc(100vh-72px)] items-center justify-center bg-[#f5f5f3]">
+      <section className="flex h-[calc(100dvh-72px)] items-center justify-center bg-[#f5f5f3]">
         <p className="text-sm text-neutral-500">등록된 이미지가 없습니다.</p>
       </section>
     );

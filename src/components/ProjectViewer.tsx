@@ -15,16 +15,15 @@ import type { ProjectDetail } from "@/lib/projects";
  * - PC: 헤더 72px 상단 패딩, 좌우 각 10% 여백(`md:px-[10%]`), w-full·cover
  */
 const PV_CLASSES = {
-  root: "relative h-[calc(100vh-72px)] w-full bg-[#f5f5f3] md:-mt-[72px] md:h-screen md:bg-transparent",
+  root: "relative h-[calc(100dvh-72px)] w-full bg-[#f5f5f3] md:-mt-[72px] md:h-dvh md:bg-transparent",
   imageShell:
     "relative h-full min-h-0 overflow-hidden md:[&_.swiper]:!cursor-inherit",
   swiperInner: "relative h-full min-h-0 w-full",
   horizontalSlide:
     "!flex items-center justify-center px-4 pb-[calc(1.5rem+1.5rem+1.25rem+env(safe-area-inset-bottom,0px))] md:px-[10%] md:pt-[72px] md:pb-[calc(2rem+2rem+1.25rem)]",
   imageFrame:
-    "relative h-full min-h-0 w-[86%] max-h-[90vh] md:h-full md:w-full md:max-h-full",
+    "relative h-full min-h-0 w-[86%] max-h-[90dvh] md:h-full md:w-full md:max-h-full",
   imageFit: "pointer-events-none object-contain md:!object-cover md:object-center",
-  /** PC: 하단 바(py-6 md:py-8 + 한 줄)와 동일 여백 — 가로 슬라이드 md:pb 토큰과 맞춤 */
   navHitOuter:
     "absolute top-0 z-20 hidden h-full items-center md:flex md:pointer-events-none md:top-[72px] md:h-auto md:bottom-[calc(2rem+2rem+1.25rem)] md:w-[40%]",
   navHitStripBtn:
@@ -238,7 +237,7 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
   }, []);
 
   return (
-    <div className="relative h-[calc(100vh-72px)] w-full bg-[#f5f5f3] md:-mt-[72px] md:h-screen md:bg-transparent">
+    <div className="relative h-[calc(100dvh-72px)] w-full bg-[#f5f5f3] md:-mt-[72px] md:h-dvh md:bg-transparent">
       {/* Image area — full height, swiper extends behind bottom bar */}
       <div
         ref={imageShellRef}
