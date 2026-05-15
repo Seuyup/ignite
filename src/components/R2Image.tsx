@@ -48,7 +48,7 @@ export function R2Image(props: FillProps | FixedProps) {
           alt={alt}
           fill
           draggable={false}
-          className={className}
+          className={fillClass}
           sizes={props.sizes ?? "(max-width: 768px) 100vw, 1200px"}
           priority={props.priority}
         />
