@@ -12,6 +12,8 @@ type Props = { navItems: NavItem[] };
 
 export function HeaderClient({ navItems }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
+  /** 링크 이동·메뉴 닫기 시 리마운트 → 하위 아코디언 전부 접힘 */
+  const [navListKey, setNavListKey] = useState(0);
   const [hidden, setHidden] = useState(false);
   const lastScrollY = useRef(0);
   const pathname = usePathname();
@@ -56,12 +58,15 @@ export function HeaderClient({ navItems }: Props) {
         }`}
       >
         <nav className="flex h-full flex-col px-10 pt-[25vh] md:px-20">
-          <ul className="space-y-4">
+          <ul key={navListKey} className="space-y-4">
             {navItems.map((item) => (
               <NavMenuItem
                 key={item.label}
                 item={item}
-                onNavigate={() => setMenuOpen(false)}
+                onNavigate={() => {
+                  setMenuOpen(false);
+                  setNavListKey((k) => k + 1);
+                }}
               />
             ))}
           </ul>
@@ -77,14 +82,22 @@ export function HeaderClient({ navItems }: Props) {
           <Link
             href="/"
             className="relative z-[60] text-[1.5rem] font-medium tracking-tight text-neutral-900"
-            onClick={() => setMenuOpen(false)}
+            onClick={() => {
+              setMenuOpen(false);
+              setNavListKey((k) => k + 1);
+            }}
           >
             IGNITE
           </Link>
           <button
             type="button"
             className={`header__toggle relative z-[60] flex h-8 w-8 items-center justify-center ${menuOpen ? "active" : ""}`}
-            onClick={() => setMenuOpen(!menuOpen)}
+            onClick={() => {
+              setMenuOpen((open) => {
+                if (open) setNavListKey((k) => k + 1);
+                return !open;
+              });
+            }}
             aria-label={menuOpen ? "메뉴 닫기" : "메뉴 열기"}
             aria-expanded={menuOpen}
           >
@@ -152,10 +165,7 @@ function NavMenuItem({
             <Link
               href={child.href}
               className="text-xl font-medium tracking-tight text-neutral-700 transition-colors hover:text-neutral-900 hover:underline hover:underline-offset-4 md:text-2xl"
-              onClick={() => {
-                setExpanded(false);
-                onNavigate();
-              }}
+              onClick={onNavigate}
             >
               {child.label}
             </Link>
