@@ -66,7 +66,7 @@ export default function StudioMap({
   return (
     <div
       ref={containerRef}
-      className="h-[400px] w-full rounded-lg border border-neutral-200"
+      className="relative z-0 h-[400px] w-full rounded-lg border border-neutral-200"
     />
   );
 }
