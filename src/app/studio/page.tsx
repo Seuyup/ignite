@@ -9,37 +9,37 @@ export default async function StudioPage() {
   const body = await getStudioBody();
   const trimmed = body.trim();
 
-  if (!trimmed) {
-    return (
-      <section className="mx-auto max-w-4xl px-6 py-20 md:py-28">
-        <h1 className="text-3xl font-medium tracking-tight text-neutral-900 md:text-4xl">
-          Studio
-        </h1>
-        <p className="mt-6 text-sm text-neutral-500">
-          스튜디오 소개가 준비 중입니다.
-        </p>
-      </section>
-    );
-  }
-
   const looksLikeHtml = /<\/?[a-z][\s\S]*>/i.test(trimmed);
   const content = looksLikeHtml ? sanitizeRichHtml(body) : null;
 
   return (
-    <section className="mx-auto max-w-4xl px-6 py-20 md:py-28">
-      <h1 className="text-3xl font-medium tracking-tight text-neutral-900 md:text-4xl">
-        Studio
-      </h1>
-      {content ? (
-        <div
-          className="prose prose-neutral mt-10 max-w-none prose-headings:font-medium prose-headings:tracking-tight prose-p:text-neutral-600 prose-a:text-neutral-900 prose-img:rounded"
-          dangerouslySetInnerHTML={{ __html: content }}
-        />
-      ) : (
-        <div className="mt-10 whitespace-pre-wrap text-sm text-neutral-700">
-          {body}
+    <div className="min-h-[calc(100dvh-72px)]">
+      <div className="flex flex-col px-6 py-16 md:flex-row md:px-10 md:py-24 lg:px-[90px]">
+        {/* Left - label */}
+        <div className="mb-10 md:mb-0 md:flex-1">
+          <h1 className="text-sm font-medium text-neutral-900 md:sticky md:top-[25vh]">
+            Studio
+          </h1>
         </div>
-      )}
-    </section>
+
+        {/* Right - content */}
+        <div className="w-full md:w-[55%] md:max-w-[680px] md:flex-shrink-0 md:mr-[15%]">
+          {!trimmed ? (
+            <p className="text-sm text-neutral-500">
+              스튜디오 소개가 준비 중입니다.
+            </p>
+          ) : content ? (
+            <div
+              className="prose prose-neutral max-w-none prose-headings:font-medium prose-headings:tracking-tight prose-p:text-neutral-600 prose-a:text-neutral-900 prose-img:rounded"
+              dangerouslySetInnerHTML={{ __html: content }}
+            />
+          ) : (
+            <div className="whitespace-pre-wrap text-sm font-medium leading-relaxed text-neutral-900">
+              {body}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
