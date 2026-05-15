@@ -133,13 +133,60 @@ export async function upsertIgniteBody(
   );
 }
 
+export type StudioLocation = {
+  lat: number;
+  lng: number;
+  address: string;
+  mapTile: string;
+  zoom: number;
+} | null;
+
 export async function getStudioBody(): Promise<string> {
   return getIgniteBody(IGNITE_TYPE_STUDIO);
 }
 
-export async function getStudioForAdmin(): Promise<{ body: string }> {
-  const body = await getIgniteBody(IGNITE_TYPE_STUDIO);
-  return { body };
+export async function getStudioLocation(): Promise<StudioLocation> {
+  try {
+    await connectDB();
+    const doc = await Ignite.findOne({ type: IGNITE_TYPE_STUDIO }).lean();
+    const loc = (doc as {
+      location?: { lat?: number; lng?: number; address?: string; mapTile?: string; zoom?: number };
+    } | null)?.location;
+    if (loc?.lat != null && loc?.lng != null) {
+      return {
+        lat: loc.lat,
+        lng: loc.lng,
+        address: loc.address ?? "",
+        mapTile: loc.mapTile || "stadia_stamen_toner",
+        zoom: loc.zoom ?? 16,
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export async function upsertStudioLocation(
+  data: { lat: number; lng: number; address: string; mapTile: string; zoom: number },
+): Promise<void> {
+  await connectDB();
+  await Ignite.findOneAndUpdate(
+    { type: IGNITE_TYPE_STUDIO },
+    { $set: { location: data } },
+    { upsert: true, new: true },
+  );
+}
+
+export async function getStudioForAdmin(): Promise<{
+  body: string;
+  location: StudioLocation;
+}> {
+  const [body, location] = await Promise.all([
+    getIgniteBody(IGNITE_TYPE_STUDIO),
+    getStudioLocation(),
+  ]);
+  return { body, location };
 }
 
 export type HomeImage = { url: string; link: string };

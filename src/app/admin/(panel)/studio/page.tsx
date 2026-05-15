@@ -4,7 +4,7 @@ import { AdminStudioForm } from "@/components/admin/AdminStudioForm";
 export const dynamic = "force-dynamic";
 
 export default async function AdminStudioPage() {
-  const { body } = await getStudioForAdmin();
+  const { body, location } = await getStudioForAdmin();
 
   return (
     <div>
@@ -12,10 +12,10 @@ export default async function AdminStudioPage() {
         Studio 페이지 편집
       </h1>
       <p className="mt-2 text-sm text-neutral-500">
-        Studio 페이지에 표시될 HTML 콘텐츠를 편집합니다.
+        Studio 페이지에 표시될 HTML 콘텐츠와 위치 정보를 편집합니다.
       </p>
       <div className="mt-8">
-        <AdminStudioForm initialBody={body} />
+        <AdminStudioForm initialBody={body} initialLocation={location} />
       </div>
     </div>
   );

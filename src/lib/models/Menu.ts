@@ -10,6 +10,11 @@ import { Schema, models, model } from "mongoose";
  * 콘텐츠:
  *   type: "home" → body에 JSON (이미지 URL 배열)
  *   type: "studio" → body에 HTML
+ *
+ * 위치(선택):
+ *   location.lat / location.lng → 지도 좌표
+ *   location.address → 표시 주소
+ *   location.mapTile → Leaflet 타일 템플릿 키 (기본: "stadia_stamen_toner")
  */
 const menuSchema = new Schema(
   {
@@ -30,6 +35,13 @@ const menuSchema = new Schema(
       default: null,
     },
     sortOrder: { type: Number, default: 0 },
+    location: {
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+      address: { type: String, default: "" },
+      mapTile: { type: String, default: "stadia_stamen_toner" },
+      zoom: { type: Number, default: 16 },
+    },
   },
   { timestamps: true },
 );
