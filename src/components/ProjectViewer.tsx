@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Mousewheel } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
@@ -47,6 +47,7 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
   const vertSwiperRef = useRef<SwiperType | null>(null);
   const isTransitioning = useRef(false);
   const ignoreSlideChange = useRef(false);
+  const pendingVertReset = useRef<{ swiper: SwiperType; newAdjacent: { prev: ProjectDetail | null; next: ProjectDetail | null } } | null>(null);
 
   const images = currentProject.images.length > 0
     ? currentProject.images
@@ -89,6 +90,16 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
   const currentProjectRef = useRef(currentProject);
   currentProjectRef.current = currentProject;
 
+  useLayoutEffect(() => {
+    const pending = pendingVertReset.current;
+    if (!pending) return;
+    pendingVertReset.current = null;
+
+    pending.swiper.slideTo(currentVertIdx, 0);
+    isTransitioning.current = false;
+    ignoreSlideChange.current = false;
+  });
+
   const handleVertTransitionEnd = useCallback(
     async (swiper: SwiperType) => {
       const idx = swiper.activeIndex;
@@ -114,26 +125,18 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
         if (res.ok) newAdjacent = await res.json();
       } catch { /* keep defaults */ }
 
+      const newSwiper = hSwiperMapRef.current.get(target.slug);
+      if (newSwiper) {
+        imageSwiperRef.current = newSwiper;
+        newSwiper.slideTo(0, 0);
+      }
+
+      pendingVertReset.current = { swiper, newAdjacent };
+
       setCurrentProject(target);
       setAdjacent(newAdjacent);
       setImageIndex(0);
       setShowContent(false);
-
-      requestAnimationFrame(() => {
-        const newCenterIdx = newAdjacent.prev ? 1 : 0;
-        swiper.slideTo(newCenterIdx, 0);
-
-        const newSwiper = hSwiperMapRef.current.get(target.slug);
-        if (newSwiper) {
-          imageSwiperRef.current = newSwiper;
-          newSwiper.slideTo(0, 0);
-        }
-
-        isTransitioning.current = false;
-        requestAnimationFrame(() => {
-          ignoreSlideChange.current = false;
-        });
-      });
     },
     [],
   );
