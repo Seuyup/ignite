@@ -24,7 +24,7 @@ export default async function ContactPage() {
         </div>
 
         {/* Right - content */}
-        <div className="w-full md:w-[55%] md:max-w-[680px] md:flex-shrink-0 md:mr-[15%]">
+        <div className="w-full md:w-[55%] md:max-w-[680px] md:flex-shrink-0 md:mr-[22%]">
           <div className="space-y-10">
             <p className="text-sm font-medium leading-relaxed text-neutral-900">
               프로젝트를 논의하고 싶으시다면, 전화를 주시거나 아래 양식을 작성해

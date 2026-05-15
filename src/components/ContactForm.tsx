@@ -87,7 +87,7 @@ export function ContactForm() {
           placeholder="Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full border-b border-neutral-300 bg-transparent py-3 text-sm font-medium text-neutral-900 outline-none placeholder:text-neutral-900 focus:border-neutral-900"
+          className="w-full border-b border-neutral-900 bg-transparent py-3 text-sm font-medium text-neutral-900 outline-none placeholder:text-neutral-900 focus:border-neutral-900"
         />
       </div>
       <div>
@@ -96,7 +96,7 @@ export function ContactForm() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full border-b border-neutral-300 bg-transparent py-3 text-sm font-medium text-neutral-900 outline-none placeholder:text-neutral-900 focus:border-neutral-900"
+          className="w-full border-b border-neutral-900 bg-transparent py-3 text-sm font-medium text-neutral-900 outline-none placeholder:text-neutral-900 focus:border-neutral-900"
         />
       </div>
       <div>
@@ -105,7 +105,7 @@ export function ContactForm() {
           placeholder="Message"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          className="w-full resize-none border border-neutral-300 bg-transparent p-4 text-sm font-medium text-neutral-900 outline-none placeholder:text-neutral-900 focus:border-neutral-900"
+          className="w-full resize-none border border-neutral-900 bg-transparent p-4 text-sm font-medium text-neutral-900 outline-none placeholder:text-neutral-900 focus:border-neutral-900"
         />
       </div>
       <label className="flex items-center gap-2">
