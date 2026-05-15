@@ -20,7 +20,7 @@ export function SiteFooter() {
           BOXERYUP@NAVER.COM
         </a>
         <p className="text-xs uppercase tracking-wide text-neutral-600">
-          &copy;{new Date().getFullYear()} IGNITE
+          &copy;2024 IGNITE
         </p>
       </div>
     </footer>
