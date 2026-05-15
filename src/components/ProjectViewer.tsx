@@ -84,6 +84,8 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
 
   const tapTrackRef = useRef<TapTrack | null>(null);
   const tapPointerUpRef = useRef<((e: PointerEvent) => void) | null>(null);
+  /** 모바일에서 휠·관성이 세로 스와이퍼를 건드려 인접 슬라이드가 잠깐 보이는 현상 완화 — PC에서만 mousewheel 사용 */
+  const [vertMousewheel, setVertMousewheel] = useState(false);
 
   const detachTapPointerListeners = useCallback(() => {
     const h = tapPointerUpRef.current;
@@ -96,6 +98,14 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
   }, []);
 
   useEffect(() => () => detachTapPointerListeners(), [detachTapPointerListeners]);
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(min-width: ${MD_MIN_PX}px)`);
+    const apply = () => setVertMousewheel(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   useEffect(() => {
     setCurrentProject(project);
@@ -250,7 +260,12 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
         <Swiper
           modules={[Mousewheel]}
           direction="vertical"
-          mousewheel={!showContent ? { forceToAxis: true, thresholdDelta: 30 } : false}
+          resistance={false}
+          mousewheel={
+            !showContent && vertMousewheel
+              ? { forceToAxis: true, thresholdDelta: 30 }
+              : false
+          }
           speed={800}
           initialSlide={currentVertIdx}
           onSwiper={(s) => { vertSwiperRef.current = s; }}
@@ -271,10 +286,17 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
                     <div className={PV_CLASSES.swiperInner}>
                       <Swiper
                         nested
-                        loop={projTotal > 1}
+                        loop={false}
+                        rewind={projTotal > 1}
+                        observer
+                        observeParents
                         speed={800}
                         onSwiper={isActive ? (s) => { imageSwiperRef.current = s; } : undefined}
-                        onSlideChange={isActive ? (s) => setImageIndex(s.realIndex) : undefined}
+                        onSlideChange={
+                          isActive
+                            ? (s) => setImageIndex(s.realIndex ?? s.activeIndex)
+                            : undefined
+                        }
                         className="h-full w-full"
                       >
                         {projImages.map((url, i) => (
