@@ -14,10 +14,10 @@ export function SiteFooter() {
     <footer className="relative z-40 md:pointer-events-none md:fixed md:bottom-0 md:left-0 md:right-0">
       <div className="flex items-center justify-between px-6 py-5 md:pointer-events-auto md:px-10">
         <a
-          href="mailto:boxeryup@naver.com"
+          href="mailto:ignite2403@gmail.com"
           className="text-xs uppercase tracking-wide text-neutral-600 transition-colors hover:text-neutral-900"
         >
-          BOXERYUP@NAVER.COM
+          IGNITE2403@GMAIL.COM
         </a>
         <p className="text-xs uppercase tracking-wide text-neutral-600">
           &copy;2024 IGNITE
