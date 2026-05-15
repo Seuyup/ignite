@@ -6,7 +6,7 @@ import { ProjectsGrid } from "@/components/ProjectsGrid";
 import {
   getProjectBySlug,
   getProjectsByMenuId,
-  getAdjacentProjects,
+  getProjectDetailsByMenuId,
 } from "@/lib/project-queries";
 import { getProjectCategories } from "@/lib/ignite-data";
 
@@ -91,12 +91,13 @@ export default async function ProjectSlugPage({ params }: Props) {
   const project = await getProjectBySlug(slug);
   if (!project) notFound();
 
-  const adjacent = await getAdjacentProjects(slug, project.menu_id);
+  const allProjects = await getProjectDetailsByMenuId(project.menu_id);
+  const startIndex = allProjects.findIndex((p) => p.slug === slug);
 
   return (
     <ProjectViewer
-      project={project}
-      adjacentProjects={adjacent}
+      projects={allProjects}
+      initialIndex={startIndex >= 0 ? startIndex : 0}
     />
   );
 }

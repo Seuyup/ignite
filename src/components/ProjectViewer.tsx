@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Mousewheel } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
@@ -12,8 +12,7 @@ import type { ProjectDetail } from "@/lib/projects";
 
 const PV_CLASSES = {
   root: "relative h-[calc(100dvh-72px)] w-full bg-[#F5F4F0] md:-mt-[72px] md:h-dvh md:bg-transparent",
-  imageShell:
-    "relative h-full min-h-0 overflow-hidden",
+  imageShell: "relative h-full min-h-0 overflow-hidden",
   swiperInner: "relative h-full min-h-0 w-full",
   horizontalSlide:
     "!flex items-center justify-center px-4 pb-[calc(1.5rem+1.5rem+1.25rem+env(safe-area-inset-bottom,0px))] md:px-[10%] md:pt-[72px] md:pb-[calc(2rem+2rem+1.25rem)]",
@@ -31,115 +30,69 @@ const PV_CLASSES = {
 } as const;
 
 type Props = {
-  project: ProjectDetail;
-  adjacentProjects: { prev: ProjectDetail | null; next: ProjectDetail | null };
+  projects: ProjectDetail[];
+  initialIndex: number;
 };
 
-export function ProjectViewer({ project, adjacentProjects }: Props) {
-  const [currentProject, setCurrentProject] = useState(project);
-  const [adjacent, setAdjacent] = useState(adjacentProjects);
+function getProjectImages(proj: ProjectDetail): string[] {
+  if (proj.images.length > 0) return proj.images;
+  if (proj.coverImageUrl) return [proj.coverImageUrl];
+  return [];
+}
+
+export function ProjectViewer({ projects, initialIndex }: Props) {
+  const [vertIndex, setVertIndex] = useState(initialIndex);
   const [imageIndex, setImageIndex] = useState(0);
   const [showContent, setShowContent] = useState(false);
 
   const imageShellRef = useRef<HTMLDivElement>(null);
-  const imageSwiperRef = useRef<SwiperType | null>(null);
-  const hSwiperMapRef = useRef<Map<string, SwiperType>>(new Map());
   const vertSwiperRef = useRef<SwiperType | null>(null);
-  const isTransitioning = useRef(false);
-  const ignoreSlideChange = useRef(false);
-  const pendingVertReset = useRef<{ swiper: SwiperType; newAdjacent: { prev: ProjectDetail | null; next: ProjectDetail | null } } | null>(null);
+  const hSwipersRef = useRef<Map<number, SwiperType>>(new Map());
 
-  const images = currentProject.images.length > 0
-    ? currentProject.images
-    : currentProject.coverImageUrl
-      ? [currentProject.coverImageUrl]
-      : [];
+  const currentProject = projects[vertIndex] ?? projects[0];
+  const images = getProjectImages(currentProject);
   const total = images.length;
 
+  const activeHSwiper = useCallback(() => {
+    return hSwipersRef.current.get(vertIndex) ?? null;
+  }, [vertIndex]);
+
+  const hSwiperProxyRef = useRef<SwiperType | null>(null);
+  useEffect(() => {
+    hSwiperProxyRef.current = activeHSwiper();
+  }, [activeHSwiper]);
+
   const { navEdge, isMobile, reset, shellProps } = useSlideNav({
-    swiperRef: imageSwiperRef,
+    swiperRef: hSwiperProxyRef,
     shellRef: imageShellRef,
     total,
     disabled: showContent,
   });
 
+  const handleVertSlideChange = useCallback((swiper: SwiperType) => {
+    const newIdx = swiper.activeIndex;
+    setVertIndex(newIdx);
+    setShowContent(false);
+
+    const hSwiper = hSwipersRef.current.get(newIdx);
+    if (hSwiper) {
+      hSwiperProxyRef.current = hSwiper;
+      setImageIndex(hSwiper.realIndex);
+    }
+  }, []);
+
   useEffect(() => {
-    ignoreSlideChange.current = true;
-    setCurrentProject(project);
-    setAdjacent(adjacentProjects);
+    setVertIndex(initialIndex);
     setImageIndex(0);
     setShowContent(false);
     reset();
-    imageSwiperRef.current?.slideTo(0, 0);
-    requestAnimationFrame(() => {
-      ignoreSlideChange.current = false;
-    });
-  }, [project, adjacentProjects, reset]);
-
-  // --- Vertical swiper: project navigation ---
-  const vertSlides: ProjectDetail[] = [];
-  if (adjacent.prev) vertSlides.push(adjacent.prev);
-  vertSlides.push(currentProject);
-  if (adjacent.next) vertSlides.push(adjacent.next);
-  const currentVertIdx = adjacent.prev ? 1 : 0;
-
-  const currentVertIdxRef = useRef(currentVertIdx);
-  currentVertIdxRef.current = currentVertIdx;
-  const adjacentRef = useRef(adjacent);
-  adjacentRef.current = adjacent;
-  const currentProjectRef = useRef(currentProject);
-  currentProjectRef.current = currentProject;
-
-  useLayoutEffect(() => {
-    const pending = pendingVertReset.current;
-    if (!pending) return;
-    pendingVertReset.current = null;
-
-    pending.swiper.slideTo(currentVertIdx, 0);
-    isTransitioning.current = false;
-    ignoreSlideChange.current = false;
-  });
-
-  const handleVertTransitionEnd = useCallback(
-    async (swiper: SwiperType) => {
-      const idx = swiper.activeIndex;
-      const centerIdx = currentVertIdxRef.current;
-      if (idx === centerIdx || isTransitioning.current) return;
-
-      const adj = adjacentRef.current;
-      const direction = idx > centerIdx ? "next" : "prev";
-      const target = direction === "next" ? adj.next : adj.prev;
-      if (!target) {
-        swiper.slideTo(centerIdx, 0);
-        return;
-      }
-
-      isTransitioning.current = true;
-      ignoreSlideChange.current = true;
-
-      let newAdjacent = { prev: null as ProjectDetail | null, next: null as ProjectDetail | null };
-      try {
-        const res = await fetch(
-          `/api/projects/${target.slug}/adjacent?menu_id=${target.menu_id}`,
-        );
-        if (res.ok) newAdjacent = await res.json();
-      } catch { /* keep defaults */ }
-
-      const newSwiper = hSwiperMapRef.current.get(target.slug);
-      if (newSwiper) {
-        imageSwiperRef.current = newSwiper;
-        newSwiper.slideTo(0, 0);
-      }
-
-      pendingVertReset.current = { swiper, newAdjacent };
-
-      setCurrentProject(target);
-      setAdjacent(newAdjacent);
-      setImageIndex(0);
-      setShowContent(false);
-    },
-    [],
-  );
+    vertSwiperRef.current?.slideTo(initialIndex, 0);
+    const hSwiper = hSwipersRef.current.get(initialIndex);
+    if (hSwiper) {
+      hSwiperProxyRef.current = hSwiper;
+      hSwiper.slideTo(0, 0);
+    }
+  }, [projects, initialIndex, reset]);
 
   const mousewheelConfig = showContent
     ? false
@@ -159,20 +112,17 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
           allowTouchMove={isMobile}
           mousewheel={mousewheelConfig}
           speed={800}
-          initialSlide={currentVertIdx}
+          initialSlide={initialIndex}
           onSwiper={(s) => { vertSwiperRef.current = s; }}
-          onSlideChangeTransitionEnd={handleVertTransitionEnd}
+          onSlideChangeTransitionEnd={handleVertSlideChange}
           className="h-full w-full"
         >
-          {vertSlides.map((proj, vIdx) => {
-            const projImages = proj.images.length > 0
-              ? proj.images
-              : proj.coverImageUrl ? [proj.coverImageUrl] : [];
+          {projects.map((proj, vIdx) => {
+            const projImages = getProjectImages(proj);
             const projTotal = projImages.length;
-            const isActive = vIdx === currentVertIdx;
 
             return (
-              <SwiperSlide key={`${proj.slug}-${vIdx}`}>
+              <SwiperSlide key={proj.slug}>
                 <div className="relative h-full w-full">
                   {projImages.length > 0 ? (
                     <div className={PV_CLASSES.swiperInner}>
@@ -180,15 +130,13 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
                         nested
                         loop={projTotal > 1}
                         allowTouchMove={isMobile}
-                        observer
-                        observeParents
                         speed={800}
                         onSwiper={(s) => {
-                          hSwiperMapRef.current.set(proj.slug, s);
-                          if (isActive) imageSwiperRef.current = s;
+                          hSwipersRef.current.set(vIdx, s);
+                          if (vIdx === initialIndex) hSwiperProxyRef.current = s;
                         }}
                         onSlideChange={(s) => {
-                          if (!ignoreSlideChange.current && proj.slug === currentProjectRef.current.slug) {
+                          if (vIdx === vertSwiperRef.current?.activeIndex) {
                             setImageIndex(s.realIndex);
                           }
                         }}
@@ -203,7 +151,7 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
                                 mode="fill"
                                 className={PV_CLASSES.imageFit}
                                 sizes="(max-width: 767px) 86vw, min(96vw, 2400px)"
-                                priority={i === 0}
+                                priority={vIdx === initialIndex && i === 0}
                               />
                             </div>
                           </SwiperSlide>
@@ -227,7 +175,7 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
               type="button"
               data-swiper-image-nav
               className={PV_CLASSES.navHitStripBtn}
-              onClick={() => imageSwiperRef.current?.slidePrev()}
+              onClick={() => activeHSwiper()?.slidePrev()}
               aria-label="이전 이미지"
             >
               <svg
@@ -252,7 +200,7 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
               type="button"
               data-swiper-image-nav
               className={PV_CLASSES.navHitStripBtnEnd}
-              onClick={() => imageSwiperRef.current?.slideNext()}
+              onClick={() => activeHSwiper()?.slideNext()}
               aria-label="다음 이미지"
             >
               <svg

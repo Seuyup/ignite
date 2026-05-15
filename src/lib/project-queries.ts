@@ -53,6 +53,20 @@ export async function getProjectsByMenuId(
   }
 }
 
+export async function getProjectDetailsByMenuId(
+  menuId: string,
+): Promise<ProjectDetail[]> {
+  try {
+    await connectDB();
+    const docs = await ProjectModel.find({ ...ACTIVE, menu_id: menuId })
+      .sort({ sortOrder: 1, createdAt: -1 })
+      .lean();
+    return docs.map(mapDocDetail);
+  } catch {
+    return [];
+  }
+}
+
 export async function getProjectBySlug(
   slug: string,
 ): Promise<ProjectDetail | null> {
