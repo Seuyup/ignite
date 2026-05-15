@@ -6,9 +6,10 @@ export function SiteFooter() {
   const pathname = usePathname();
 
   const isHome = pathname === "/";
+  const isAdmin = pathname.startsWith("/admin");
   const isProjectDetail = pathname.startsWith("/projects/") && !isCategory(pathname);
 
-  if (isHome || isProjectDetail) return null;
+  if (isHome || isAdmin || isProjectDetail) return null;
 
   return (
     <footer className="relative z-40 md:pointer-events-none md:fixed md:bottom-0 md:left-0 md:right-0">

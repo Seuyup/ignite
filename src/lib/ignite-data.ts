@@ -3,6 +3,7 @@ import { Menu as Ignite } from "@/lib/models/Menu";
 
 export const IGNITE_TYPE_STUDIO = "studio" as const;
 export const IGNITE_TYPE_HOME = "home" as const;
+export const IGNITE_TYPE_CONTACT = "contact" as const;
 
 export type MenuItem = {
   id: string;
@@ -220,4 +221,15 @@ export async function getHomeImagesForAdmin(): Promise<HomeImage[]> {
 
 export async function upsertHomeImages(images: HomeImage[]): Promise<void> {
   await upsertIgniteBody(IGNITE_TYPE_HOME, JSON.stringify(images));
+}
+
+/* ── Contact ── */
+
+export async function getContactBody(): Promise<string> {
+  return getIgniteBody(IGNITE_TYPE_CONTACT);
+}
+
+export async function getContactForAdmin(): Promise<{ body: string }> {
+  const body = await getIgniteBody(IGNITE_TYPE_CONTACT);
+  return { body };
 }

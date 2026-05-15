@@ -66,6 +66,14 @@ export function AdminPanelNav({ categories, activeCategory }: Props) {
         >
           Studio
         </Link>
+        <Link
+          href="/admin/contact"
+          className={`rounded-md px-2 py-1 transition-colors hover:bg-neutral-100 hover:text-neutral-900 ${
+            isActive("/admin/contact") ? "bg-neutral-100 text-neutral-900" : "text-neutral-600"
+          }`}
+        >
+          Contact
+        </Link>
         <form action={logoutAction} className="ml-auto">
           <button
             type="submit"
