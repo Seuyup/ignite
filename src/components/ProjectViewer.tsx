@@ -7,17 +7,13 @@ import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
 
 import { R2Image } from "@/components/R2Image";
+import { useSlideNav, goSlidePrev, goSlideNext } from "@/hooks/useSlideNav";
 import type { ProjectDetail } from "@/lib/projects";
 
-/**
- * 모바일(<md) / PC(md+) 레이아웃·이미지 규칙을 한곳에 모아 둡니다.
- * - 모바일: 좁은 패딩, 하단 바 높이만큼 slide pb → contain 기준 가운데, 세로 90vh 상한
- * - PC: 헤더 72px 상단 패딩, 좌우 각 10% 여백(`md:px-[10%]`), w-full·cover
- */
 const PV_CLASSES = {
-  root: "relative h-[calc(100dvh-72px)] w-full bg-[#f5f5f3] md:-mt-[72px] md:h-dvh md:bg-transparent",
+  root: "relative h-[calc(100dvh-72px)] w-full bg-[#F5F4F0] md:-mt-[72px] md:h-dvh md:bg-transparent",
   imageShell:
-    "relative h-full min-h-0 overflow-hidden md:[&_.swiper]:!cursor-inherit",
+    "relative h-full min-h-0 overflow-hidden",
   swiperInner: "relative h-full min-h-0 w-full",
   horizontalSlide:
     "!flex items-center justify-center px-4 pb-[calc(1.5rem+1.5rem+1.25rem+env(safe-area-inset-bottom,0px))] md:px-[10%] md:pt-[72px] md:pb-[calc(2rem+2rem+1.25rem)]",
@@ -27,11 +23,11 @@ const PV_CLASSES = {
   navHitOuter:
     "absolute top-0 z-20 hidden h-full items-center md:flex md:pointer-events-none md:top-[72px] md:h-auto md:bottom-[calc(2rem+2rem+1.25rem)] md:w-[40%]",
   navHitStripBtn:
-    "group/strip flex h-full w-32 shrink-0 cursor-pointer items-center justify-start border-0 bg-transparent p-0 pl-2 text-neutral-900 md:pl-4 pointer-events-auto",
+    "group/strip flex h-full w-32 shrink-0 cursor-pointer items-center justify-start border-0 bg-transparent p-0 pl-6 text-neutral-900 md:pl-10 pointer-events-auto",
   navHitStripBtnEnd:
-    "group/strip flex h-full w-32 shrink-0 cursor-pointer items-center justify-end border-0 bg-transparent p-0 pr-2 text-neutral-900 md:pr-4 pointer-events-auto",
+    "group/strip flex h-full w-32 shrink-0 cursor-pointer items-center justify-end border-0 bg-transparent p-0 pr-6 text-neutral-900 md:pr-10 pointer-events-auto",
   metaScroll:
-    "box-border flex h-full w-full items-center justify-center overflow-y-auto bg-[#f5f5f3] px-8 py-10 pb-[calc(1.5rem+1.5rem+1.25rem+2.5rem+env(safe-area-inset-bottom,0px))] md:px-[10%] md:pt-[72px] md:py-14 md:pb-[calc(2rem+2rem+1.25rem+1.5rem)]",
+    "box-border flex h-full w-full items-center justify-center overflow-y-auto bg-[#F5F4F0] px-8 py-10 pb-[calc(1.5rem+1.5rem+1.25rem+2.5rem+env(safe-area-inset-bottom,0px))] md:px-[10%] md:pt-[72px] md:py-14 md:pb-[calc(2rem+2rem+1.25rem+1.5rem)]",
 } as const;
 
 type Props = {
@@ -39,36 +35,18 @@ type Props = {
   adjacentProjects: { prev: ProjectDetail | null; next: ProjectDetail | null };
 };
 
-/** PC(md+)에서 이미지 셸 너비 기준 좌·우 40% 구간 (가운데 20%는 화살표 없음) */
-type NavEdge = "left" | "right" | null;
-const MD_MIN_PX = 768;
-/** 좌·우 40%에서 짧은 드래그 없이 뗐을 때 이전/다음으로 처리할 최대 이동(px) */
-const TAP_MOVE_MAX_PX = 12;
-
-function navZoneFromClientInShell(shell: HTMLElement, clientX: number): NavEdge {
-  const rect = shell.getBoundingClientRect();
-  const w = rect.width;
-  if (w <= 0) return null;
-  const x = clientX - rect.left;
-  if (x <= w * 0.4) return "left";
-  if (x >= w * 0.6) return "right";
-  return null;
-}
-
-type TapTrack = { pointerId: number; x: number; y: number; zone: "left" | "right" };
-
 export function ProjectViewer({ project, adjacentProjects }: Props) {
   const [currentProject, setCurrentProject] = useState(project);
   const [adjacent, setAdjacent] = useState(adjacentProjects);
   const [imageIndex, setImageIndex] = useState(0);
   const [showContent, setShowContent] = useState(false);
-  /** PC에서 포인터가 셸의 좌 40% / 우 40%에 있을 때만 해당 쪽 화살표 표시 */
-  const [navEdge, setNavEdge] = useState<NavEdge>(null);
-  const navEdgeRef = useRef<NavEdge>(null);
+
   const imageShellRef = useRef<HTMLDivElement>(null);
   const imageSwiperRef = useRef<SwiperType | null>(null);
   const vertSwiperRef = useRef<SwiperType | null>(null);
   const isTransitioning = useRef(false);
+
+  const imageIndexCacheRef = useRef<Map<string, number>>(new Map());
 
   const images = currentProject.images.length > 0
     ? currentProject.images
@@ -77,71 +55,58 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
       : [];
   const total = images.length;
 
-  const uiTapRefs = useRef({ showContent: false, total: 0 });
-  uiTapRefs.current.showContent = showContent;
-  uiTapRefs.current.total = total;
-
-  const tapTrackRef = useRef<TapTrack | null>(null);
-  const tapPointerUpRef = useRef<((e: PointerEvent) => void) | null>(null);
-
-  const detachTapPointerListeners = useCallback(() => {
-    const h = tapPointerUpRef.current;
-    if (h) {
-      window.removeEventListener("pointerup", h);
-      window.removeEventListener("pointercancel", h);
-      tapPointerUpRef.current = null;
-    }
-    tapTrackRef.current = null;
-  }, []);
-
-  useEffect(() => () => detachTapPointerListeners(), [detachTapPointerListeners]);
+  const { navEdge, isMobile, reset, shellProps } = useSlideNav({
+    swiperRef: imageSwiperRef,
+    shellRef: imageShellRef,
+    total,
+    disabled: showContent,
+  });
 
   useEffect(() => {
     setCurrentProject(project);
     setAdjacent(adjacentProjects);
     setImageIndex(0);
     setShowContent(false);
-    navEdgeRef.current = null;
-    setNavEdge(null);
-    detachTapPointerListeners();
-    imageShellRef.current?.style.removeProperty("cursor");
+    reset();
     imageSwiperRef.current?.slideTo(0, 0);
-  }, [project, adjacentProjects, detachTapPointerListeners]);
+  }, [project, adjacentProjects, reset]);
 
-  useEffect(() => {
-    const onResize = () => {
-      if (typeof window === "undefined" || window.innerWidth >= MD_MIN_PX) return;
-      detachTapPointerListeners();
-      imageShellRef.current?.style.removeProperty("cursor");
-      if (navEdgeRef.current !== null) {
-        navEdgeRef.current = null;
-        setNavEdge(null);
-      }
-    };
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [detachTapPointerListeners]);
-
-  // Vertical slides: only include existing adjacent projects
+  // --- Vertical swiper: project navigation ---
   const vertSlides: ProjectDetail[] = [];
   if (adjacent.prev) vertSlides.push(adjacent.prev);
   vertSlides.push(currentProject);
   if (adjacent.next) vertSlides.push(adjacent.next);
   const currentVertIdx = adjacent.prev ? 1 : 0;
 
+  const currentVertIdxRef = useRef(currentVertIdx);
+  currentVertIdxRef.current = currentVertIdx;
+  const adjacentRef = useRef(adjacent);
+  adjacentRef.current = adjacent;
+  const currentProjectRef = useRef(currentProject);
+  currentProjectRef.current = currentProject;
+  const imageIndexRef = useRef(imageIndex);
+  imageIndexRef.current = imageIndex;
+
   const handleVertTransitionEnd = useCallback(
     async (swiper: SwiperType) => {
       const idx = swiper.activeIndex;
-      if (idx === currentVertIdx || isTransitioning.current) return;
+      const centerIdx = currentVertIdxRef.current;
+      if (idx === centerIdx || isTransitioning.current) return;
 
-      const direction = idx > currentVertIdx ? "next" : "prev";
-      const target = direction === "next" ? adjacent.next : adjacent.prev;
+      const adj = adjacentRef.current;
+      const direction = idx > centerIdx ? "next" : "prev";
+      const target = direction === "next" ? adj.next : adj.prev;
       if (!target) {
-        swiper.slideTo(currentVertIdx, 0);
+        swiper.slideTo(centerIdx, 0);
         return;
       }
 
       isTransitioning.current = true;
+
+      imageIndexCacheRef.current.set(
+        currentProjectRef.current.slug,
+        imageIndexRef.current,
+      );
 
       let newAdjacent = { prev: null as ProjectDetail | null, next: null as ProjectDetail | null };
       try {
@@ -151,133 +116,66 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
         if (res.ok) newAdjacent = await res.json();
       } catch { /* keep defaults */ }
 
+      const cachedIdx = imageIndexCacheRef.current.get(target.slug) ?? 0;
+
       setCurrentProject(target);
       setAdjacent(newAdjacent);
-      setImageIndex(0);
+      setImageIndex(cachedIdx);
       setShowContent(false);
 
       requestAnimationFrame(() => {
         const newCenterIdx = newAdjacent.prev ? 1 : 0;
         swiper.slideTo(newCenterIdx, 0);
-        imageSwiperRef.current?.slideTo(0, 0);
+        imageSwiperRef.current?.slideTo(cachedIdx, 0);
         isTransitioning.current = false;
       });
     },
-    [adjacent],
+    [],
   );
 
-  const syncNavEdgeFromClientX = useCallback((clientX: number) => {
-    const shell = imageShellRef.current;
-    if (typeof window === "undefined" || window.innerWidth < MD_MIN_PX) {
-      shell?.style.removeProperty("cursor");
-      if (navEdgeRef.current !== null) {
-        navEdgeRef.current = null;
-        setNavEdge(null);
-      }
-      return;
-    }
-    if (!shell) return;
-    const next = navZoneFromClientInShell(shell, clientX);
-    if (navEdgeRef.current !== next) {
-      navEdgeRef.current = next;
-      setNavEdge(next);
-    }
-    const { showContent: metaOpen, total: n } = uiTapRefs.current;
-    if (metaOpen || n <= 1) shell.style.removeProperty("cursor");
-    else shell.style.cursor = next ? "pointer" : "";
-  }, []);
-
-  const handleImageShellPointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      if (e.pointerType === "mouse" && e.button !== 0) return;
-      if (typeof window === "undefined" || window.innerWidth < MD_MIN_PX) return;
-      const { showContent: metaOpen, total: n } = uiTapRefs.current;
-      if (metaOpen || n <= 1) return;
-      const el = e.target;
-      if (!(el instanceof Element)) return;
-      if (el.closest("[data-swiper-image-nav]")) return;
-      const shell = imageShellRef.current;
-      if (!shell?.contains(el)) return;
-      const zone = navZoneFromClientInShell(shell, e.clientX);
-      if (!zone) return;
-      detachTapPointerListeners();
-      tapTrackRef.current = {
-        pointerId: e.pointerId,
-        x: e.clientX,
-        y: e.clientY,
-        zone,
-      };
-      const onUp = (ev: PointerEvent) => {
-        window.removeEventListener("pointerup", onUp);
-        window.removeEventListener("pointercancel", onUp);
-        tapPointerUpRef.current = null;
-        const tr = tapTrackRef.current;
-        tapTrackRef.current = null;
-        if (!tr || ev.pointerId !== tr.pointerId) return;
-        const d = Math.hypot(ev.clientX - tr.x, ev.clientY - tr.y);
-        if (d > TAP_MOVE_MAX_PX) return;
-        const upEl = ev.target;
-        if (upEl instanceof Element && upEl.closest("[data-swiper-image-nav]")) return;
-        if (tr.zone === "left") imageSwiperRef.current?.slidePrev();
-        else imageSwiperRef.current?.slideNext();
-      };
-      tapPointerUpRef.current = onUp;
-      window.addEventListener("pointerup", onUp);
-      window.addEventListener("pointercancel", onUp);
-    },
-    [detachTapPointerListeners],
-  );
-
-  const handleImageShellPointerLeave = useCallback(() => {
-    imageShellRef.current?.style.removeProperty("cursor");
-    if (navEdgeRef.current !== null) {
-      navEdgeRef.current = null;
-      setNavEdge(null);
-    }
-  }, []);
+  const mousewheelConfig = showContent
+    ? false
+    : { forceToAxis: true, thresholdDelta: 30 };
 
   return (
-    <div className="relative h-[calc(100dvh-72px)] w-full bg-[#f5f5f3] md:-mt-[72px] md:h-dvh md:bg-transparent">
-      {/* Image area — full height, swiper extends behind bottom bar */}
+    <div className={PV_CLASSES.root}>
       <div
         ref={imageShellRef}
         className={PV_CLASSES.imageShell}
-        onPointerDownCapture={handleImageShellPointerDown}
-        onPointerMove={(e) => syncNavEdgeFromClientX(e.clientX)}
-        onPointerLeave={handleImageShellPointerLeave}
+        {...shellProps}
       >
         <Swiper
           modules={[Mousewheel]}
           direction="vertical"
           resistance={false}
-          mousewheel={!showContent ? { forceToAxis: true, thresholdDelta: 30 } : false}
+          allowTouchMove={isMobile}
+          mousewheel={mousewheelConfig}
           speed={800}
           initialSlide={currentVertIdx}
           onSwiper={(s) => { vertSwiperRef.current = s; }}
           onSlideChangeTransitionEnd={handleVertTransitionEnd}
           className="h-full w-full"
         >
-          {vertSlides.map((proj, vIdx) => (
-            <SwiperSlide key={`${proj.slug}-${vIdx}`}>
-              <div className="relative h-full w-full">
-                {(() => {
-                  const projImages = proj.images.length > 0
-                    ? proj.images
-                    : proj.coverImageUrl ? [proj.coverImageUrl] : [];
-                  const projTotal = projImages.length;
-                  const isActive = vIdx === currentVertIdx;
+          {vertSlides.map((proj, vIdx) => {
+            const projImages = proj.images.length > 0
+              ? proj.images
+              : proj.coverImageUrl ? [proj.coverImageUrl] : [];
+            const projTotal = projImages.length;
+            const isActive = vIdx === currentVertIdx;
 
-                  return projImages.length > 0 ? (
+            return (
+              <SwiperSlide key={`${proj.slug}-${vIdx}`}>
+                <div className="relative h-full w-full">
+                  {projImages.length > 0 ? (
                     <div className={PV_CLASSES.swiperInner}>
                       <Swiper
                         nested
-                        loop={projTotal > 1}
-                        loopAdditionalSlides={1}
+                        allowTouchMove={isMobile}
                         observer
                         observeParents
                         speed={800}
                         onSwiper={isActive ? (s) => { imageSwiperRef.current = s; } : undefined}
-                        onSlideChange={isActive ? (s) => setImageIndex(s.realIndex) : undefined}
+                        onSlideChange={isActive ? (s) => setImageIndex(s.activeIndex) : undefined}
                         className="h-full w-full"
                       >
                         {projImages.map((url, i) => (
@@ -300,21 +198,23 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
                     <div className="flex h-full items-center justify-center pb-[calc(1.5rem+1.5rem+1.25rem+env(safe-area-inset-bottom,0px))] md:pb-[calc(2rem+2rem+1.25rem)]">
                       <p className="text-sm text-neutral-500">이미지 없음</p>
                     </div>
-                  );
-                })()}
-              </div>
-            </SwiperSlide>
-          ))}
+                  )}
+                </div>
+              </SwiperSlide>
+            );
+          })}
         </Swiper>
 
-        {/* Left nav zone – PC only */}
         {total > 1 && !showContent && (
           <div className={`${PV_CLASSES.navHitOuter} left-0 md:justify-start`}>
             <button
               type="button"
               data-swiper-image-nav
               className={PV_CLASSES.navHitStripBtn}
-              onClick={() => imageSwiperRef.current?.slidePrev()}
+              onClick={() => {
+                const sw = imageSwiperRef.current;
+                if (sw) goSlidePrev(sw, total);
+              }}
               aria-label="이전 이미지"
             >
               <svg
@@ -333,14 +233,16 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
           </div>
         )}
 
-        {/* Right nav zone – PC only */}
         {total > 1 && !showContent && (
           <div className={`${PV_CLASSES.navHitOuter} right-0 md:justify-end`}>
             <button
               type="button"
               data-swiper-image-nav
               className={PV_CLASSES.navHitStripBtnEnd}
-              onClick={() => imageSwiperRef.current?.slideNext()}
+              onClick={() => {
+                const sw = imageSwiperRef.current;
+                if (sw) goSlideNext(sw, total);
+              }}
               aria-label="다음 이미지"
             >
               <svg
@@ -359,7 +261,7 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
           </div>
         )}
 
-        {/* Project content overlay – covers image area only */}
+        {/* Project content overlay */}
         <div
           data-pv-meta-layer
           className={`absolute inset-0 z-30 flex items-center justify-center transition-opacity duration-300 ${
@@ -389,7 +291,7 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
         </div>
       </div>
 
-      {/* Bottom bar: overlaid with transparent bg so swiper slides visible behind */}
+      {/* Bottom bar */}
       <div className="absolute bottom-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-6 md:px-10 md:py-8">
         <button
           type="button"
@@ -406,7 +308,6 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
           </span>
         )}
       </div>
-
     </div>
   );
 }

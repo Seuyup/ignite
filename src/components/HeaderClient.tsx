@@ -51,7 +51,7 @@ export function HeaderClient({ navItems }: Props) {
     <>
       {/* Fullscreen menu overlay — outside header to avoid transform context */}
       <div
-        className={`header__menu fixed inset-0 z-50 bg-[#f5f5f3] transition-all duration-500 ${
+        className={`header__menu fixed inset-0 z-50 bg-[#F5F4F0] transition-all duration-500 ${
           menuOpen
             ? "pointer-events-auto opacity-100"
             : "pointer-events-none opacity-0"
@@ -74,7 +74,7 @@ export function HeaderClient({ navItems }: Props) {
       </div>
 
       <header
-        className={`fixed left-0 right-0 top-0 z-[55] bg-[#f5f5f3] md:bg-transparent transition-transform duration-300 ${
+        className={`fixed left-0 right-0 top-0 z-[55] bg-[#F5F4F0] md:bg-transparent transition-transform duration-300 ${
           hidden && !menuOpen ? "-translate-y-full" : "translate-y-0"
         }`}
       >

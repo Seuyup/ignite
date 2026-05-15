@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={dmSans.variable}>
-      <body className="min-h-dvh bg-[#f5f5f3] font-sans antialiased">
+      <body className="min-h-dvh bg-[#F5F4F0] font-sans antialiased">
         <SiteHeader />
         <main id="main" className="pt-[72px]">
           {children}
