@@ -52,18 +52,7 @@ export default function ContactPage() {
             <div className="text-sm leading-relaxed text-neutral-700">
               <p>서울특별시 강남구</p>
               <p>대한민국</p>
-            </div>
-
-            <div className="space-y-1 text-sm">
-              <p>
-                <a
-                  href="mailto:boxeryup@naver.com"
-                  className="text-neutral-700 underline underline-offset-4 hover:text-neutral-900"
-                >
-                  boxeryup@naver.com
-                </a>
-              </p>
-            </div>
+            </div>            
           </div>
         </div>
       </div>

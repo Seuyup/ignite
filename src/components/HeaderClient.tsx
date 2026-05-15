@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { NavItem } from "@/lib/navigation";
 
 const SCROLL_THRESHOLD = 10;
+const CATEGORIES = new Set(["architecture", "interior"]);
 
 type Props = { navItems: NavItem[] };
 
@@ -12,11 +14,18 @@ export function HeaderClient({ navItems }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [hidden, setHidden] = useState(false);
   const lastScrollY = useRef(0);
+  const pathname = usePathname();
+
+  const isHome = pathname === "/";
+  const isProjectDetail =
+    pathname.startsWith("/projects/") &&
+    !CATEGORIES.has(pathname.split("/").pop() ?? "");
+  const disableHide = isHome || isProjectDetail;
 
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
-      if (menuOpen || window.innerWidth >= 768) {
+      if (menuOpen || disableHide || window.innerWidth >= 768) {
         setHidden(false);
         lastScrollY.current = y;
         return;
@@ -30,7 +39,7 @@ export function HeaderClient({ navItems }: Props) {
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [menuOpen]);
+  }, [menuOpen, disableHide]);
 
   useEffect(() => {
     if (menuOpen) setHidden(false);

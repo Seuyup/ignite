@@ -84,7 +84,7 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
 
   return (
     <div className="relative h-[calc(100vh-72px)] w-full bg-[#f5f5f3] md:-mt-[72px] md:h-screen md:bg-transparent">
-      {/* Image area with vertical swiper for project navigation */}
+      {/* Image area — full height, swiper extends behind bottom bar */}
       <div className="relative h-full overflow-hidden">
         <Swiper
           modules={[Mousewheel]}
@@ -116,7 +116,10 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
                       className="h-full w-full"
                     >
                       {projImages.map((url, i) => (
-                        <SwiperSlide key={url + i} className="!flex items-center justify-center">
+                        <SwiperSlide
+                          key={url + i}
+                          className="!flex items-center justify-center pb-[calc(1.5rem+1.5rem+1.25rem+env(safe-area-inset-bottom,0px))] md:pb-[calc(2rem+2rem+1.25rem)]"
+                        >
                           <div className="relative h-full max-h-[90vh] w-[86%] md:w-[80%]">
                             <R2Image
                               src={url}
@@ -131,7 +134,7 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
                       ))}
                     </Swiper>
                   ) : (
-                    <div className="flex h-full items-center justify-center">
+                    <div className="flex h-full items-center justify-center pb-[calc(1.5rem+1.5rem+1.25rem+env(safe-area-inset-bottom,0px))] md:pb-[calc(2rem+2rem+1.25rem)]">
                       <p className="text-sm text-neutral-500">이미지 없음</p>
                     </div>
                   );
@@ -200,8 +203,8 @@ export function ProjectViewer({ project, adjacentProjects }: Props) {
         </div>
       </div>
 
-      {/* Bottom bar: title + paging — overlaid on PC */}
-      <div className="absolute bottom-0 left-0 right-0 z-40 flex items-center justify-between bg-[#f5f5f3] px-6 py-6 md:bg-transparent md:px-10 md:py-8">
+      {/* Bottom bar: overlaid with transparent bg so swiper slides visible behind */}
+      <div className="absolute bottom-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-6 md:px-10 md:py-8">
         <button
           type="button"
           className={`text-[0.9375rem] font-medium tracking-tight text-neutral-900 ${
