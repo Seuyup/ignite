@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, lazy, Suspense, type ReactNode } from "react";
 import type { StudioMapProps } from "@/components/StudioMap";
 
 const NAVER_MAPS_SCRIPT_ID = "naver-maps-sdk";
+
+const StudioMapLazy = lazy(() => import("@/components/StudioMap"));
 
 function useNaverMapsReady(): boolean {
   const [ready, setReady] = useState(false);
@@ -52,9 +54,9 @@ export default function StudioMapLoader(props: StudioMapProps) {
 
   if (!ready) return <MapPlaceholder />;
 
-  const StudioMap =
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    require("@/components/StudioMap").default as React.ComponentType<StudioMapProps>;
-
-  return <StudioMap {...props} />;
+  return (
+    <Suspense fallback={<MapPlaceholder />}>
+      <StudioMapLazy {...props} />
+    </Suspense>
+  );
 }
