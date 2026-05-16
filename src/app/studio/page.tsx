@@ -55,7 +55,7 @@ export default async function StudioPage() {
         </div>
 
         {/* Right - content: 상단 HTML → 지도 → 하단 HTML */}
-        <div className="w-full md:w-[55%] md:max-w-[680px] md:flex-shrink-0 md:mr-[15%]">
+        <div className="w-full md:w-[55%] md:max-w-[680px] md:flex-shrink-0 md:mr-[22%]">
           {hasTop && renderHtmlBlock(bodyTop)}
 
           {hasLocation && (

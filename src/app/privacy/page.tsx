@@ -60,7 +60,7 @@ export default function PrivacyPage() {
         </div>
 
         {/* Right - content */}
-        <div className="w-full md:w-[55%] md:max-w-[680px] md:flex-shrink-0 md:mr-[15%]">
+        <div className="w-full md:w-[55%] md:max-w-[680px] md:flex-shrink-0 md:mr-[22%]">
           <div className="space-y-12">
             {SECTIONS.map((section, idx) => (
               <section key={idx}>
