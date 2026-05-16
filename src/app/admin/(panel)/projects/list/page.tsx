@@ -65,7 +65,7 @@ export default async function AdminProjectListPage({ searchParams }: Props) {
   if (!result.ok) {
     return (
       <div>
-        <h1 className="text-2xl font-medium tracking-tight text-neutral-900 md:text-3xl">
+        <h1 className="text-lg font-medium text-neutral-900">
           프로젝트
         </h1>
         <div
@@ -91,7 +91,7 @@ export default async function AdminProjectListPage({ searchParams }: Props) {
   return (
     <div>
       <div>
-        <h1 className="text-2xl font-medium tracking-tight text-neutral-900 md:text-3xl">
+        <h1 className="text-lg font-medium text-neutral-900">
           {categoryLabel}
         </h1>
         <p className="mt-2 text-sm text-neutral-500">

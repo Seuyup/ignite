@@ -1,23 +1,41 @@
-import { getStudioBody, getStudioLocation } from "@/lib/ignite-data";
+import { getStudioBodies, getStudioLocation } from "@/lib/ignite-data";
 import { sanitizeRichHtml } from "@/lib/sanitize-html";
 import StudioMapLoader from "@/components/StudioMapLoader";
+import type { NaverMapType } from "@/lib/map-tiles";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = { title: "Studio" };
 
-export default async function StudioPage() {
-  const [body, location] = await Promise.all([
-    getStudioBody(),
-    getStudioLocation(),
-  ]);
-  const trimmed = body.trim();
+function renderHtmlBlock(raw: string) {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
 
   const looksLikeHtml = /<\/?[a-z][\s\S]*>/i.test(trimmed);
-  const content = looksLikeHtml ? sanitizeRichHtml(body) : null;
+  const sanitized = looksLikeHtml ? sanitizeRichHtml(raw) : null;
 
+  return sanitized ? (
+    <div
+      className="prose prose-neutral max-w-none prose-headings:font-medium prose-headings:tracking-tight prose-p:text-neutral-600 prose-a:text-neutral-900 prose-img:rounded"
+      dangerouslySetInnerHTML={{ __html: sanitized }}
+    />
+  ) : (
+    <div className="whitespace-pre-wrap text-sm font-medium leading-relaxed text-neutral-900">
+      {raw}
+    </div>
+  );
+}
+
+export default async function StudioPage() {
+  const [{ bodyTop, bodyBottom }, location] = await Promise.all([
+    getStudioBodies(),
+    getStudioLocation(),
+  ]);
+
+  const hasTop = !!bodyTop.trim();
   const hasLocation = !!location;
-  const hasBody = !!trimmed;
+  const hasBottom = !!bodyBottom.trim();
+  const hasAny = hasTop || hasLocation || hasBottom;
 
   return (
     <div className="min-h-[calc(100dvh-72px)]">
@@ -29,35 +47,33 @@ export default async function StudioPage() {
           </h1>
         </div>
 
-        {/* Right - content */}
+        {/* Right - content: 상단 HTML → 지도 → 하단 HTML */}
         <div className="w-full md:w-[55%] md:max-w-[680px] md:flex-shrink-0 md:mr-[15%]">
-          {hasLocation && (
-            <StudioMapLoader
-              lat={location.lat}
-              lng={location.lng}
-              address={location.address}
-              mapTile={location.mapTile}
-              zoom={location.zoom}
-            />
-          )}
+          {hasTop && renderHtmlBlock(bodyTop)}
 
-          {/* HTML 콘텐츠 - 하단 */}
-          {hasBody && (
-            <div className={hasLocation ? "mt-16" : ""}>
-              {content ? (
-                <div
-                  className="prose prose-neutral max-w-none prose-headings:font-medium prose-headings:tracking-tight prose-p:text-neutral-600 prose-a:text-neutral-900 prose-img:rounded"
-                  dangerouslySetInnerHTML={{ __html: content }}
-                />
-              ) : (
-                <div className="whitespace-pre-wrap text-sm font-medium leading-relaxed text-neutral-900">
-                  {body}
-                </div>
-              )}
+          {hasLocation && (
+            <div>
+              <StudioMapLoader
+                lat={location.lat}
+                lng={location.lng}
+                mapType={location.mapType as NaverMapType}
+                zoom={location.zoom}
+                showZoomControl={location.showZoomControl}
+                showScaleControl={location.showScaleControl}
+                showMapTypeControl={location.showMapTypeControl}
+                scrollWheel={location.scrollWheel}
+                draggable={location.draggable}
+              />
             </div>
           )}
 
-          {!hasLocation && !hasBody && (
+          {hasBottom && (
+            <div>
+              {renderHtmlBlock(bodyBottom)}
+            </div>
+          )}
+
+          {!hasAny && (
             <p className="text-sm text-neutral-500">
               스튜디오 소개가 준비 중입니다.
             </p>

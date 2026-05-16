@@ -64,7 +64,7 @@ export default async function AdminTrashProjectsPage({ searchParams }: Props) {
           ← 프로젝트 목록
         </Link>
       </p>
-      <h1 className="mt-4 text-2xl font-medium tracking-tight text-neutral-900 md:text-3xl">
+      <h1 className="mt-4 text-lg font-medium text-neutral-900">
         휴지통
       </h1>
       <p className="mt-2 text-sm text-neutral-500">

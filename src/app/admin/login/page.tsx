@@ -11,7 +11,7 @@ export default async function AdminLoginPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
-      <h1 className="text-2xl font-medium tracking-tight text-neutral-900 md:text-3xl">
+      <h1 className="text-lg font-medium text-neutral-900">
         관리자 로그인
       </h1>
       <p className="mt-4 max-w-md text-sm text-neutral-500">

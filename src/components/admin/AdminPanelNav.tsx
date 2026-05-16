@@ -24,7 +24,8 @@ export function AdminPanelNav({ categories, activeCategory }: Props) {
     pathname.startsWith("/admin/projects"),
   );
 
-  const isActive = (href: string) => pathname.startsWith(href);
+    const activeClass = "bg-neutral-900 text-white";
+    const inactiveClass = "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900";
 
   return (
     <nav
@@ -34,8 +35,8 @@ export function AdminPanelNav({ categories, activeCategory }: Props) {
       <div className="flex flex-wrap items-center gap-6">
         <Link
           href="/admin/home"
-          className={`rounded-md px-2 py-1 transition-colors hover:bg-neutral-100 hover:text-neutral-900 ${
-            isActive("/admin/home") ? "bg-neutral-100 text-neutral-900" : "text-neutral-600"
+          className={`rounded-md px-2 py-1 transition-colors ${
+            pathname.startsWith("/admin/home") ? activeClass : inactiveClass
           }`}
         >
           Home
@@ -43,8 +44,8 @@ export function AdminPanelNav({ categories, activeCategory }: Props) {
         <button
           type="button"
           onClick={() => setProjectsOpen(!projectsOpen)}
-          className={`flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors hover:bg-neutral-100 hover:text-neutral-900 ${
-            isActive("/admin/projects") ? "bg-neutral-100 text-neutral-900" : "text-neutral-600"
+          className={`flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors ${
+            pathname.startsWith("/admin/projects") ? activeClass : inactiveClass
           }`}
         >
           PROJECTS
@@ -60,16 +61,16 @@ export function AdminPanelNav({ categories, activeCategory }: Props) {
         </button>
         <Link
           href="/admin/studio"
-          className={`rounded-md px-2 py-1 transition-colors hover:bg-neutral-100 hover:text-neutral-900 ${
-            isActive("/admin/studio") ? "bg-neutral-100 text-neutral-900" : "text-neutral-600"
+          className={`rounded-md px-2 py-1 transition-colors ${
+            pathname.startsWith("/admin/studio") ? activeClass : inactiveClass
           }`}
         >
           Studio
         </Link>
         <Link
           href="/admin/contact"
-          className={`rounded-md px-2 py-1 transition-colors hover:bg-neutral-100 hover:text-neutral-900 ${
-            isActive("/admin/contact") ? "bg-neutral-100 text-neutral-900" : "text-neutral-600"
+          className={`rounded-md px-2 py-1 transition-colors ${
+            pathname.startsWith("/admin/contact") ? activeClass : inactiveClass
           }`}
         >
           Contact

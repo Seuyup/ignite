@@ -1,67 +1,95 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import { getTileByKey } from "@/lib/map-tiles";
+import type { NaverMapType } from "@/lib/map-tiles";
 
-type Props = {
+export type StudioMapProps = {
   lat: number;
   lng: number;
-  address?: string;
-  mapTile?: string;
+  mapType?: NaverMapType;
   zoom?: number;
+  showZoomControl?: boolean;
+  showScaleControl?: boolean;
+  showMapTypeControl?: boolean;
+  scrollWheel?: boolean;
+  draggable?: boolean;
 };
 
-const MARKER_ICON = L.icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
+declare global {
+  interface Window {
+    naver: typeof naver;
+  }
+}
+
+const MAP_TYPE_MAP: Record<string, () => naver.maps.MapTypeId> = {
+  NORMAL: () => naver.maps.MapTypeId.NORMAL,
+  SATELLITE: () => naver.maps.MapTypeId.SATELLITE,
+  HYBRID: () => naver.maps.MapTypeId.HYBRID,
+  TERRAIN: () => naver.maps.MapTypeId.TERRAIN,
+};
 
 export default function StudioMap({
   lat,
   lng,
-  address,
-  mapTile = "stadia_stamen_toner",
+  mapType = "NORMAL",
   zoom = 16,
-}: Props) {
+  showZoomControl = true,
+  showScaleControl = true,
+  showMapTypeControl = false,
+  scrollWheel = false,
+  draggable = true,
+}: StudioMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<L.Map | null>(null);
+  const mapInstanceRef = useRef<naver.maps.Map | null>(null);
+  const markerRef = useRef<naver.maps.Marker | null>(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || !window.naver?.maps) return;
+
+    const position = new naver.maps.LatLng(lat, lng);
 
     if (mapInstanceRef.current) {
-      mapInstanceRef.current.remove();
+      mapInstanceRef.current.destroy();
       mapInstanceRef.current = null;
+      markerRef.current = null;
     }
 
-    const tile = getTileByKey(mapTile);
-    const map = L.map(containerRef.current, {
-      scrollWheelZoom: false,
-    }).setView([lat, lng], zoom);
+    const resolvedTypeId = (MAP_TYPE_MAP[mapType] ?? MAP_TYPE_MAP.NORMAL)();
 
-    L.tileLayer(tile.url, {
-      attribution: tile.attribution,
-      maxZoom: 20,
-    }).addTo(map);
+    const map = new naver.maps.Map(containerRef.current, {
+      center: position,
+      zoom,
+      scrollWheel,
+      draggable,
+      mapTypeId: resolvedTypeId,
+      zoomControl: showZoomControl,
+      zoomControlOptions: {
+        position: naver.maps.Position.TOP_RIGHT,
+      },
+      scaleControl: showScaleControl,
+      scaleControlOptions: {
+        position: naver.maps.Position.BOTTOM_RIGHT,
+      },
+      mapTypeControl: showMapTypeControl,
+      mapTypeControlOptions: {
+        position: naver.maps.Position.TOP_LEFT,
+      },
+    });
 
-    const marker = L.marker([lat, lng], { icon: MARKER_ICON }).addTo(map);
-    if (address) marker.bindPopup(address);
+    const marker = new naver.maps.Marker({
+      position,
+      map,
+    });
 
+    markerRef.current = marker;
     mapInstanceRef.current = map;
 
     return () => {
-      map.remove();
+      map.destroy();
       mapInstanceRef.current = null;
+      markerRef.current = null;
     };
-  }, [lat, lng, address, mapTile, zoom]);
+  }, [lat, lng, mapType, zoom, showZoomControl, showScaleControl, showMapTypeControl, scrollWheel, draggable]);
 
   return (
     <div

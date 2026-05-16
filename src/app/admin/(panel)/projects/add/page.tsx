@@ -34,7 +34,7 @@ export default async function AdminAddProjectPage({ searchParams }: Props) {
           &larr; 목록
         </Link>
       </p>
-      <h1 className="mt-4 text-2xl font-medium tracking-tight text-neutral-900 md:text-3xl">
+      <h1 className="mt-4 text-lg font-medium text-neutral-900">
         추가
       </h1>
       <div className="mt-10">

@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import {
   updateContactAction,
   type ContactFormState,
@@ -14,11 +15,16 @@ type Props = {
 };
 
 export function AdminContactForm({ initialBody }: Props) {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState(
     updateContactAction,
     initial,
   );
   const getHtmlRef = useRef<() => string>(() => initialBody);
+
+  useEffect(() => {
+    if (state.saved) router.refresh();
+  }, [state.saved, router]);
 
   return (
     <form

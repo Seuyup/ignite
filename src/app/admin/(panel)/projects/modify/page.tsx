@@ -41,7 +41,7 @@ export default async function AdminModifyProjectPage({ searchParams }: Props) {
           &larr; 목록
         </Link>
       </p>
-      <h1 className="mt-4 text-2xl font-medium tracking-tight text-neutral-900 md:text-3xl">
+      <h1 className="mt-4 text-lg font-medium text-neutral-900">
         수정
       </h1>
       <div className="mt-10">

@@ -9,12 +9,11 @@ import { Schema, models, model } from "mongoose";
  *
  * 콘텐츠:
  *   type: "home" → body에 JSON (이미지 URL 배열)
- *   type: "studio" → body에 HTML
+ *   type: "studio" → bodyTop / bodyBottom에 HTML (지도 상하단)
  *
  * 위치(선택):
  *   location.lat / location.lng → 지도 좌표
- *   location.address → 표시 주소
- *   location.mapTile → Leaflet 타일 템플릿 키 (기본: "stadia_stamen_toner")
+ *   location.mapType → 네이버 지도 유형 (NORMAL, SATELLITE, HYBRID, TERRAIN)
  */
 const menuSchema = new Schema(
   {
@@ -25,6 +24,8 @@ const menuSchema = new Schema(
       lowercase: true,
     },
     body: { type: String, default: "" },
+    bodyTop: { type: String, default: "" },
+    bodyBottom: { type: String, default: "" },
     sort: {
       type: String,
       enum: ["top_menu", "child_menu", null],
@@ -38,9 +39,14 @@ const menuSchema = new Schema(
     location: {
       lat: { type: Number, default: null },
       lng: { type: Number, default: null },
-      address: { type: String, default: "" },
-      mapTile: { type: String, default: "stadia_stamen_toner" },
+      mapTile: { type: String, default: null },
+      mapType: { type: String, default: "NORMAL" },
       zoom: { type: Number, default: 16 },
+      showZoomControl: { type: Boolean, default: true },
+      showScaleControl: { type: Boolean, default: true },
+      showMapTypeControl: { type: Boolean, default: false },
+      scrollWheel: { type: Boolean, default: false },
+      draggable: { type: Boolean, default: true },
     },
   },
   { timestamps: true },
