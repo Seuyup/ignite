@@ -11,7 +11,7 @@ const dmSans = DM_Sans({
   weight: ["300", "400", "500", "600"],
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://ignite-archi.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.ignitearch.co.kr";
 const OG_IMAGE = `${SITE_URL}/og-default.png`;
 
 export const metadata: Metadata = {
