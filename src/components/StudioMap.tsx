@@ -73,6 +73,13 @@ export default function StudioMap({
       mapTypeControl: showMapTypeControl,
       mapTypeControlOptions: {
         position: naver.maps.Position.TOP_LEFT,
+        mapTypeIds: [
+          naver.maps.MapTypeId.NORMAL,
+          naver.maps.MapTypeId.SATELLITE,
+          naver.maps.MapTypeId.HYBRID,
+          naver.maps.MapTypeId.TERRAIN,
+        ],
+        style: naver.maps.MapTypeControlStyle.BUTTON,
       },
     });
 
