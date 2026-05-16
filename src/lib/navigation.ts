@@ -26,6 +26,13 @@ function menuItemToNavItem(item: MenuItem): NavItem {
     };
   }
 
+  if (item.type === "contact") {
+    return {
+      label: "Contact",
+      href: "/contact",
+    };
+  }
+
   // 기타 top_menu 항목
   if (item.children.length > 0) {
     return {
@@ -57,9 +64,13 @@ export async function getNavItems(): Promise<NavItem[]> {
           ],
         },
         { label: "Studio", href: "/studio" },
+        { label: "Contact", href: "/contact" },
       ]
     : menuTree.map(menuItemToNavItem);
 
-  items.push({ label: "Contact", href: "/contact" });
+  if (menuTree.length > 0 && !menuTree.some((m) => m.type === "contact")) {
+    items.push({ label: "Contact", href: "/contact" });
+  }
+
   return items;
 }

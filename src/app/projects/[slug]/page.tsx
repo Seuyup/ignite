@@ -20,12 +20,36 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const categories = await getProjectCategories();
   const category = categories.find((c) => c.type === slug);
   if (category) {
-    return { title: category.label };
+    return {
+      title: category.label,
+      openGraph: { title: `${category.label} — IGNITE` },
+    };
   }
 
   const project = await getProjectBySlug(slug);
   if (!project) return { title: "Project" };
-  return { title: project.title };
+
+  const ogImage = project.coverImageUrl || project.images[0] || null;
+  return {
+    title: project.title,
+    description: [project.sub_title_1, project.sub_title_2]
+      .filter(Boolean)
+      .join(" — ") || undefined,
+    openGraph: {
+      title: `${project.title} — IGNITE`,
+      description: [project.sub_title_1, project.sub_title_2]
+        .filter(Boolean)
+        .join(" — ") || undefined,
+      ...(ogImage
+        ? { images: [{ url: ogImage, width: 1200, height: 630, alt: project.title }] }
+        : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${project.title} — IGNITE`,
+      ...(ogImage ? { images: [ogImage] } : {}),
+    },
+  };
 }
 
 export default async function ProjectSlugPage({ params }: Props) {

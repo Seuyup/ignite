@@ -4,7 +4,14 @@ import { ContactForm } from "@/components/ContactForm";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Contact" };
+export const metadata = {
+  title: "Contact",
+  description: "IGNITE에 프로젝트 문의, 채용, 협업 제안을 보내주세요.",
+  openGraph: {
+    title: "Contact — IGNITE",
+    description: "IGNITE에 프로젝트 문의, 채용, 협업 제안을 보내주세요.",
+  },
+};
 
 export default async function ContactPage() {
   const body = await getContactBody();

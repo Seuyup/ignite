@@ -5,7 +5,14 @@ import type { NaverMapType } from "@/lib/map-tiles";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Studio" };
+export const metadata = {
+  title: "Studio",
+  description: "IGNITE 건축 스튜디오 소개 및 위치 안내.",
+  openGraph: {
+    title: "Studio — IGNITE",
+    description: "IGNITE 건축 스튜디오 소개 및 위치 안내.",
+  },
+};
 
 function renderHtmlBlock(raw: string) {
   const trimmed = raw.trim();
