@@ -4,7 +4,7 @@ import { AdminStudioForm } from "@/components/admin/AdminStudioForm";
 export const dynamic = "force-dynamic";
 
 export default async function AdminStudioPage() {
-  const { bodyTop, bodyBottom, location } = await getStudioForAdmin();
+  const { bodyTop, bodyBottom, location, seo } = await getStudioForAdmin();
 
   return (
     <div>
@@ -20,6 +20,7 @@ export default async function AdminStudioPage() {
           initialBodyTop={bodyTop}
           initialBodyBottom={bodyBottom}
           initialLocation={location}
+          initialSeo={seo}
         />
       </div>
     </div>

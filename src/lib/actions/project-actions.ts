@@ -3,9 +3,43 @@
 import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/admin-guard";
 import { isSlugTakenByActiveProject } from "@/lib/admin-project-queries";
+import { upsertIgniteSeoById } from "@/lib/ignite-data";
 import { connectDB } from "@/lib/mongodb";
 import { List as Project } from "@/lib/models/List";
 import type { ProjectMeta } from "@/lib/project-types";
+
+export type CategorySeoFormState = {
+  error: string | null;
+  saved?: boolean;
+};
+
+export async function updateCategorySeoAction(
+  _prevState: CategorySeoFormState,
+  formData: FormData,
+): Promise<CategorySeoFormState> {
+  await assertAdmin();
+
+  const categoryId = formData.get("categoryId")?.toString() ?? "";
+  const seoTitle = formData.get("seoTitle")?.toString() ?? "";
+  const seoDescription = formData.get("seoDescription")?.toString() ?? "";
+  const seoOgImage = formData.get("seoOgImage")?.toString() ?? "";
+
+  if (!categoryId) return { error: "카테고리 ID가 없습니다." };
+
+  try {
+    await upsertIgniteSeoById(categoryId, {
+      title: seoTitle,
+      description: seoDescription,
+      ogImage: seoOgImage,
+    });
+  } catch {
+    return { error: "저장에 실패했습니다." };
+  }
+
+  revalidatePath("/projects");
+  revalidatePath("/admin/projects/list");
+  return { error: null, saved: true };
+}
 
 export type ProjectFormState = {
   error: string | null;

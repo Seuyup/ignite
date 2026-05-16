@@ -1,17 +1,35 @@
-import { getContactBody } from "@/lib/ignite-data";
+import type { Metadata } from "next";
+import {
+  getContactBody,
+  getIgniteSeo,
+  IGNITE_TYPE_CONTACT,
+} from "@/lib/ignite-data";
 import { sanitizeRichHtml } from "@/lib/sanitize-html";
 import { ContactForm } from "@/components/ContactForm";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Contact",
-  description: "IGNITE에 프로젝트 문의, 채용, 협업 제안을 보내주세요.",
-  openGraph: {
-    title: "Contact — IGNITE",
-    description: "IGNITE에 프로젝트 문의, 채용, 협업 제안을 보내주세요.",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const seo = await getIgniteSeo(IGNITE_TYPE_CONTACT);
+  const title = seo.title || "Contact";
+  const description =
+    seo.description || "IGNITE에 프로젝트 문의, 채용, 협업 제안을 보내주세요.";
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      ...(seo.ogImage ? { images: [{ url: seo.ogImage, width: 1200, height: 630 }] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      ...(seo.ogImage ? { images: [seo.ogImage] } : {}),
+    },
+  };
+}
 
 export default async function ContactPage() {
   const body = await getContactBody();

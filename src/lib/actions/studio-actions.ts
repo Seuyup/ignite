@@ -5,6 +5,8 @@ import { assertAdmin } from "@/lib/admin-guard";
 import {
   upsertStudioBodies,
   upsertStudioLocation,
+  upsertIgniteSeo,
+  IGNITE_TYPE_STUDIO,
 } from "@/lib/ignite-data";
 
 export type StudioFormState = {
@@ -31,6 +33,10 @@ export async function updateStudioAction(
   const scrollWheel = formData.get("scrollWheel") === "true";
   const draggable = formData.get("draggable") === "true";
 
+  const seoTitle = formData.get("seoTitle")?.toString() ?? "";
+  const seoDescription = formData.get("seoDescription")?.toString() ?? "";
+  const seoOgImage = formData.get("seoOgImage")?.toString() ?? "";
+
   try {
     await upsertStudioBodies(bodyTop, bodyBottom);
 
@@ -41,6 +47,12 @@ export async function updateStudioAction(
         scrollWheel, draggable,
       });
     }
+
+    await upsertIgniteSeo(IGNITE_TYPE_STUDIO, {
+      title: seoTitle,
+      description: seoDescription,
+      ogImage: seoOgImage,
+    });
   } catch {
     return { error: "저장에 실패했습니다." };
   }

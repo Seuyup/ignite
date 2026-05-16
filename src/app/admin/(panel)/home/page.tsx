@@ -1,10 +1,10 @@
-import { getHomeImagesForAdmin } from "@/lib/ignite-data";
+import { getHomeForAdmin } from "@/lib/ignite-data";
 import { AdminHomeForm } from "@/components/admin/AdminHomeForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminHomePage() {
-  const images = await getHomeImagesForAdmin();
+  const { images, seo } = await getHomeForAdmin();
 
   return (
     <div>
@@ -15,7 +15,7 @@ export default async function AdminHomePage() {
         홈 화면에 표시될 슬라이드쇼 이미지를 관리합니다.
       </p>
       <div className="mt-8">
-        <AdminHomeForm initialImages={images} />
+        <AdminHomeForm initialImages={images} initialSeo={seo} />
       </div>
     </div>
   );

@@ -3,11 +3,12 @@ import Link from "next/link";
 import { AdminPagination } from "@/components/admin/AdminPagination";
 import { ProjectListHeaderActions } from "@/components/admin/ProjectListHeaderActions";
 import { ProjectListSortableTable } from "@/components/admin/ProjectListSortableTable";
+import { CategorySeoForm } from "@/components/admin/CategorySeoForm";
 import {
   countTrashedProjects,
   listProjectsPaginated,
 } from "@/lib/admin-project-queries";
-import { getProjectCategories } from "@/lib/ignite-data";
+import { getProjectCategories, getIgniteSeoById } from "@/lib/ignite-data";
 
 export const metadata = {
   title: "프로젝트 목록",
@@ -87,6 +88,10 @@ export default async function AdminProjectListPage({ searchParams }: Props) {
   const categoryLabel = matchedCat
     ? matchedCat.type.charAt(0).toUpperCase() + matchedCat.type.slice(1)
     : "전체";
+
+  const categorySeo = matchedCat
+    ? await getIgniteSeoById(matchedCat.id)
+    : null;
 
   return (
     <div>
@@ -217,6 +222,17 @@ export default async function AdminProjectListPage({ searchParams }: Props) {
           </div>
         </div>
       </form>
+
+      {matchedCat && categorySeo && (
+        <div className="mt-10">
+          <CategorySeoForm
+            key={matchedCat.id}
+            categoryId={matchedCat.id}
+            categoryLabel={categoryLabel}
+            initialSeo={categorySeo}
+          />
+        </div>
+      )}
     </div>
   );
 }

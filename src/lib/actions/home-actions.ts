@@ -2,7 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/admin-guard";
-import { upsertHomeImages, type HomeImage } from "@/lib/ignite-data";
+import {
+  upsertHomeImages,
+  upsertIgniteSeo,
+  IGNITE_TYPE_HOME,
+  type HomeImage,
+} from "@/lib/ignite-data";
 
 export type HomeFormState = {
   error: string | null;
@@ -38,8 +43,17 @@ export async function updateHomeImagesAction(
     return { error: "이미지 데이터가 올바르지 않습니다." };
   }
 
+  const seoTitle = formData.get("seoTitle")?.toString() ?? "";
+  const seoDescription = formData.get("seoDescription")?.toString() ?? "";
+  const seoOgImage = formData.get("seoOgImage")?.toString() ?? "";
+
   try {
     await upsertHomeImages(images);
+    await upsertIgniteSeo(IGNITE_TYPE_HOME, {
+      title: seoTitle,
+      description: seoDescription,
+      ogImage: seoOgImage,
+    });
   } catch {
     return { error: "저장에 실패했습니다." };
   }

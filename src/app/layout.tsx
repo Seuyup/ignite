@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: "IGNITE — Architecture & Spatial Design Studio",
-    template: "%s — IGNITE",
+    template: "%s",
   },
   description:
     "WE MAY SEE THE SAME THING but WE THINK DIFFERENTLY — architecture and spatial design studio.",

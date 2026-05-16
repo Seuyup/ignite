@@ -8,7 +8,7 @@ import {
   getProjectsByMenuId,
   getProjectDetailsByMenuId,
 } from "@/lib/project-queries";
-import { getProjectCategories } from "@/lib/ignite-data";
+import { getProjectCategories, getIgniteSeoById } from "@/lib/ignite-data";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -20,9 +20,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const categories = await getProjectCategories();
   const category = categories.find((c) => c.type === slug);
   if (category) {
+    const seo = await getIgniteSeoById(category.id);
+    const title = seo.title || category.label;
+    const description = seo.description || undefined;
     return {
-      title: category.label,
-      openGraph: { title: `${category.label} — IGNITE` },
+      title,
+      ...(description ? { description } : {}),
+      openGraph: {
+        title,
+        ...(description ? { description } : {}),
+        ...(seo.ogImage
+          ? { images: [{ url: seo.ogImage, width: 1200, height: 630 }] }
+          : {}),
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        ...(description ? { description } : {}),
+        ...(seo.ogImage ? { images: [seo.ogImage] } : {}),
+      },
     };
   }
 
@@ -36,7 +52,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       .filter(Boolean)
       .join(" — ") || undefined,
     openGraph: {
-      title: `${project.title} — IGNITE`,
+      title: project.title,
       description: [project.sub_title_1, project.sub_title_2]
         .filter(Boolean)
         .join(" — ") || undefined,
@@ -46,7 +62,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title: `${project.title} — IGNITE`,
+      title: project.title,
       ...(ogImage ? { images: [ogImage] } : {}),
     },
   };

@@ -4,7 +4,7 @@ import { AdminContactForm } from "@/components/admin/AdminContactForm";
 export const dynamic = "force-dynamic";
 
 export default async function AdminContactPage() {
-  const { body } = await getContactForAdmin();
+  const { body, seo } = await getContactForAdmin();
 
   return (
     <div>
@@ -15,7 +15,7 @@ export default async function AdminContactPage() {
         Contact 페이지 하단에 표시될 HTML 콘텐츠를 편집합니다.
       </p>
       <div className="mt-8">
-        <AdminContactForm initialBody={body} />
+        <AdminContactForm initialBody={body} initialSeo={seo} />
       </div>
     </div>
   );

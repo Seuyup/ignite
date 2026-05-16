@@ -3,13 +3,14 @@
 import { useActionState, useRef, useState } from "react";
 import { updateHomeImagesAction, type HomeFormState } from "@/lib/actions/home-actions";
 import { postAdminImageUpload } from "@/lib/admin-upload-xhr";
-import type { HomeImage } from "@/lib/ignite-data";
+import { AdminSeoFields } from "@/components/admin/AdminSeoFields";
+import type { HomeImage, IgniteSeo } from "@/lib/ignite-data";
 
 const initial: HomeFormState = { error: null };
 
-type Props = { initialImages: HomeImage[] };
+type Props = { initialImages: HomeImage[]; initialSeo: IgniteSeo };
 
-export function AdminHomeForm({ initialImages }: Props) {
+export function AdminHomeForm({ initialImages, initialSeo }: Props) {
   const [images, setImages] = useState<HomeImage[]>(initialImages);
   const [newUrl, setNewUrl] = useState("");
   const [state, formAction, pending] = useActionState(updateHomeImagesAction, initial);
@@ -152,6 +153,8 @@ export function AdminHomeForm({ initialImages }: Props) {
           추가
         </button>
       </div>
+
+      <AdminSeoFields initial={initialSeo} pageName="Home" />
 
       {state.error && (
         <p className="text-sm text-red-600">{state.error}</p>

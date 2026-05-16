@@ -116,7 +116,7 @@ export function ContactForm() {
           className="h-4 w-4 border border-neutral-400 bg-transparent accent-neutral-900"
         />
         <Link
-          href="/privacy"
+          href="/p/privacy"
           target="_blank"
           className="text-sm font-medium text-neutral-900 underline underline-offset-2"
         >

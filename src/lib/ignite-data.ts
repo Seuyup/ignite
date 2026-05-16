@@ -5,6 +5,14 @@ export const IGNITE_TYPE_STUDIO = "studio" as const;
 export const IGNITE_TYPE_HOME = "home" as const;
 export const IGNITE_TYPE_CONTACT = "contact" as const;
 
+export type IgniteSeo = {
+  title: string;
+  description: string;
+  ogImage: string;
+};
+
+const EMPTY_SEO: IgniteSeo = { title: "", description: "", ogImage: "" };
+
 export type MenuItem = {
   id: string;
   type: string;
@@ -111,6 +119,62 @@ export async function getProjectCategories(): Promise<MenuItem[]> {
     return [];
   }
 }
+
+/* ── SEO ── */
+
+export async function getIgniteSeo(type: string): Promise<IgniteSeo> {
+  try {
+    await connectDB();
+    const doc = await Ignite.findOne({ type: type.toLowerCase() }).lean();
+    const seo = (doc as { seo?: Record<string, unknown> } | null)?.seo;
+    if (!seo) return { ...EMPTY_SEO };
+    return {
+      title: (seo.title as string) || "",
+      description: (seo.description as string) || "",
+      ogImage: (seo.ogImage as string) || "",
+    };
+  } catch {
+    return { ...EMPTY_SEO };
+  }
+}
+
+export async function upsertIgniteSeo(
+  type: string,
+  seo: IgniteSeo,
+): Promise<void> {
+  await connectDB();
+  await Ignite.findOneAndUpdate(
+    { type: type.toLowerCase() },
+    { $set: { seo } },
+    { upsert: true, new: true },
+  );
+}
+
+export async function getIgniteSeoById(id: string): Promise<IgniteSeo> {
+  try {
+    await connectDB();
+    const doc = await Ignite.findById(id).lean();
+    const seo = (doc as { seo?: Record<string, unknown> } | null)?.seo;
+    if (!seo) return { ...EMPTY_SEO };
+    return {
+      title: (seo.title as string) || "",
+      description: (seo.description as string) || "",
+      ogImage: (seo.ogImage as string) || "",
+    };
+  } catch {
+    return { ...EMPTY_SEO };
+  }
+}
+
+export async function upsertIgniteSeoById(
+  id: string,
+  seo: IgniteSeo,
+): Promise<void> {
+  await connectDB();
+  await Ignite.findByIdAndUpdate(id, { $set: { seo } });
+}
+
+/* ── Body ── */
 
 export async function getIgniteBody(type: string): Promise<string> {
   try {
@@ -219,12 +283,14 @@ export async function getStudioForAdmin(): Promise<{
   bodyTop: string;
   bodyBottom: string;
   location: StudioLocation;
+  seo: IgniteSeo;
 }> {
-  const [bodies, location] = await Promise.all([
+  const [bodies, location, seo] = await Promise.all([
     getStudioBodies(),
     getStudioLocation(),
+    getIgniteSeo(IGNITE_TYPE_STUDIO),
   ]);
-  return { ...bodies, location };
+  return { ...bodies, location, seo };
 }
 
 export type HomeImage = { url: string; link: string };
@@ -266,7 +332,124 @@ export async function getContactBody(): Promise<string> {
   return getIgniteBody(IGNITE_TYPE_CONTACT);
 }
 
-export async function getContactForAdmin(): Promise<{ body: string }> {
-  const body = await getIgniteBody(IGNITE_TYPE_CONTACT);
-  return { body };
+export async function getContactForAdmin(): Promise<{
+  body: string;
+  seo: IgniteSeo;
+}> {
+  const [body, seo] = await Promise.all([
+    getIgniteBody(IGNITE_TYPE_CONTACT),
+    getIgniteSeo(IGNITE_TYPE_CONTACT),
+  ]);
+  return { body, seo };
+}
+
+export async function getHomeForAdmin(): Promise<{
+  images: HomeImage[];
+  seo: IgniteSeo;
+}> {
+  const [images, seo] = await Promise.all([
+    getHomeImages(),
+    getIgniteSeo(IGNITE_TYPE_HOME),
+  ]);
+  return { images, seo };
+}
+
+/* ── Individual Pages ── */
+
+export type IndividualPage = {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  seo: IgniteSeo;
+};
+
+export async function getIndividualPages(): Promise<IndividualPage[]> {
+  try {
+    await connectDB();
+    const docs = await Ignite.find({ sort: "individual" })
+      .sort({ sortOrder: 1 })
+      .lean();
+    type Doc = Record<string, unknown> & {
+      _id: { toString(): string };
+      seo?: Record<string, unknown>;
+    };
+    return (docs as unknown as Doc[]).map((d) => ({
+      id: d._id.toString(),
+      type: (d.type as string) || "",
+      title: (d.title as string) || "",
+      body: (d.body as string) || "",
+      seo: {
+        title: (d.seo?.title as string) || "",
+        description: (d.seo?.description as string) || "",
+        ogImage: (d.seo?.ogImage as string) || "",
+      },
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function getIndividualPageByType(
+  type: string,
+): Promise<IndividualPage | null> {
+  try {
+    await connectDB();
+    const doc = await Ignite.findOne({
+      sort: "individual",
+      type: type.toLowerCase(),
+    }).lean();
+    if (!doc) return null;
+    const d = doc as Record<string, unknown> & {
+      _id: { toString(): string };
+      seo?: Record<string, unknown>;
+    };
+    return {
+      id: d._id.toString(),
+      type: (d.type as string) || "",
+      title: (d.title as string) || "",
+      body: (d.body as string) || "",
+      seo: {
+        title: (d.seo?.title as string) || "",
+        description: (d.seo?.description as string) || "",
+        ogImage: (d.seo?.ogImage as string) || "",
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function upsertIndividualPage(data: {
+  id?: string;
+  type: string;
+  title: string;
+  body: string;
+  seo: IgniteSeo;
+}): Promise<void> {
+  await connectDB();
+  if (data.id) {
+    await Ignite.findByIdAndUpdate(data.id, {
+      $set: {
+        type: data.type.toLowerCase(),
+        title: data.title,
+        body: data.body,
+        sort: "individual",
+        seo: data.seo,
+      },
+    });
+  } else {
+    await Ignite.create({
+      type: data.type.toLowerCase(),
+      title: data.title,
+      body: data.body,
+      sort: "individual",
+      seo: data.seo,
+    });
+  }
+}
+
+export async function deleteIndividualPage(id: string): Promise<void> {
+  await connectDB();
+  await Ignite.findByIdAndDelete(id);
 }

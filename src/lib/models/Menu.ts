@@ -11,6 +11,9 @@ import { Schema, models, model } from "mongoose";
  *   type: "home" → body에 JSON (이미지 URL 배열)
  *   type: "studio" → bodyTop / bodyBottom에 HTML (지도 상하단)
  *
+ * 개별 페이지:
+ *   sort: "individual" → title(페이지명) + body(HTML 콘텐츠) + type(URL slug)
+ *
  * 위치(선택):
  *   location.lat / location.lng → 지도 좌표
  *   location.mapType → 네이버 지도 유형 (NORMAL, SATELLITE, HYBRID, TERRAIN)
@@ -23,12 +26,13 @@ const menuSchema = new Schema(
       trim: true,
       lowercase: true,
     },
+    title: { type: String, default: "" },
     body: { type: String, default: "" },
     bodyTop: { type: String, default: "" },
     bodyBottom: { type: String, default: "" },
     sort: {
       type: String,
-      enum: ["top_menu", "child_menu", null],
+      enum: ["top_menu", "child_menu", "individual", null],
       default: null,
     },
     parent_id: {
@@ -36,6 +40,11 @@ const menuSchema = new Schema(
       default: null,
     },
     sortOrder: { type: Number, default: 0 },
+    seo: {
+      title: { type: String, default: "" },
+      description: { type: String, default: "" },
+      ogImage: { type: String, default: "" },
+    },
     location: {
       lat: { type: Number, default: null },
       lng: { type: Number, default: null },

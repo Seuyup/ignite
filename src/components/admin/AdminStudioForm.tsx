@@ -8,7 +8,8 @@ import {
 } from "@/lib/actions/studio-actions";
 import { ProjectHtmlEditor } from "@/components/admin/ProjectHtmlEditor";
 import { NAVER_MAP_TYPE_OPTIONS, DEFAULT_MAP_CONFIG } from "@/lib/map-tiles";
-import type { StudioLocation } from "@/lib/ignite-data";
+import { AdminSeoFields } from "@/components/admin/AdminSeoFields";
+import type { StudioLocation, IgniteSeo } from "@/lib/ignite-data";
 
 const initial: StudioFormState = { error: null };
 
@@ -16,12 +17,14 @@ type Props = {
   initialBodyTop: string;
   initialBodyBottom: string;
   initialLocation: StudioLocation;
+  initialSeo: IgniteSeo;
 };
 
 export function AdminStudioForm({
   initialBodyTop,
   initialBodyBottom,
   initialLocation,
+  initialSeo,
 }: Props) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(
@@ -270,6 +273,9 @@ export function AdminStudioForm({
           <input type="hidden" name="bodyBottom" defaultValue={initialBodyBottom} />
         </div>
       </section>
+
+      {/* ━━━ SEO 설정 ━━━ */}
+      <AdminSeoFields initial={initialSeo} pageName="Studio" />
 
       {/* ━━━ 상태 메시지 & 저장 ━━━ */}
       {state.error && (

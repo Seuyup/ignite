@@ -7,14 +7,17 @@ import {
   type ContactFormState,
 } from "@/lib/actions/contact-actions";
 import { ProjectHtmlEditor } from "@/components/admin/ProjectHtmlEditor";
+import { AdminSeoFields } from "@/components/admin/AdminSeoFields";
+import type { IgniteSeo } from "@/lib/ignite-data";
 
 const initial: ContactFormState = { error: null };
 
 type Props = {
   initialBody: string;
+  initialSeo: IgniteSeo;
 };
 
-export function AdminContactForm({ initialBody }: Props) {
+export function AdminContactForm({ initialBody, initialSeo }: Props) {
   const router = useRouter();
   const [state, formAction, pending] = useActionState(
     updateContactAction,
@@ -52,6 +55,8 @@ export function AdminContactForm({ initialBody }: Props) {
         />
         <input type="hidden" name="body" defaultValue={initialBody} />
       </div>
+
+      <AdminSeoFields initial={initialSeo} pageName="Contact" />
 
       {state.error && (
         <p className="text-sm text-red-600">{state.error}</p>

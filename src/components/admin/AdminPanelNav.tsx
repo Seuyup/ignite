@@ -75,6 +75,14 @@ export function AdminPanelNav({ categories, activeCategory }: Props) {
         >
           Contact
         </Link>
+        <Link
+          href="/admin/pages"
+          className={`rounded-md px-2 py-1 transition-colors ${
+            pathname.startsWith("/admin/pages") ? activeClass : inactiveClass
+          }`}
+        >
+          Pages
+        </Link>
         <form action={logoutAction} className="ml-auto">
           <button
             type="submit"
