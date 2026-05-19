@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useCallback, useEffect, useRef, useState } from "react";
+import { useActionState, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { postAdminImageUpload } from "@/lib/admin-upload-xhr";
@@ -95,6 +95,15 @@ export function ProjectForm(props: Props) {
   const { ghost: imgGhost, draggingIndex: imgDraggingIndex, onPointerDown: imgPointerDown, setItemRef: setImgItemRef } =
     usePointerDragSort({ items: images, onReorder: onReorderImages });
 
+  const initialImageUrls = useMemo(() => initialData?.images ?? [], [initialData]);
+  const imgMovedIndexes = useMemo(() => {
+    const s = new Set<number>();
+    images.forEach((url, i) => {
+      if (initialImageUrls[i] !== url) s.add(i);
+    });
+    return s;
+  }, [images, initialImageUrls]);
+
   const removeImage = (index: number) => {
     setImages(images.filter((_, i) => i !== index));
   };
@@ -187,7 +196,7 @@ export function ProjectForm(props: Props) {
           이미지 (첫 번째가 대표 이미지)
         </label>
 
-        {typeof document !== "undefined" && imgGhost && images[imgGhost.index]
+        {typeof document !== "undefined" && imgGhost
           ? createPortal(
               <div
                 className="pointer-events-none fixed z-[9999] rounded-lg border border-neutral-300 bg-white p-2 shadow-lg ring-1 ring-black/10"
@@ -199,11 +208,10 @@ export function ProjectForm(props: Props) {
                   </span>
                   <div className="h-10 w-16 flex-shrink-0 overflow-hidden rounded bg-neutral-100">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={images[imgGhost.index]} alt="" className="h-full w-full object-cover" />
+                    <img src={imgGhost.item} alt="" className="h-full w-full object-cover" />
                   </div>
                   <span className="min-w-0 flex-1 truncate text-xs text-neutral-600">
-                    {imgGhost.index === 0 && <span className="mr-2 rounded bg-neutral-900 px-1.5 py-0.5 text-[10px] text-white">대표</span>}
-                    {images[imgGhost.index]}
+                    {imgGhost.item}
                   </span>
                 </div>
               </div>,
@@ -218,7 +226,12 @@ export function ProjectForm(props: Props) {
               ref={setImgItemRef(i)}
               data-drag-item
               style={imgDraggingIndex === i ? { opacity: 0.3 } : undefined}
-              className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-2"
+              className={[
+                "flex items-center gap-3 rounded-lg border p-2",
+                imgMovedIndexes.has(i)
+                  ? "border-sky-300 bg-sky-500/[0.12]"
+                  : "border-neutral-200 bg-white",
+              ].join(" ")}
             >
               <button
                 type="button"

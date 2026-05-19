@@ -28,8 +28,8 @@ function hoverIndexFromClientY(
   return rows.length - 1;
 }
 
-export type GhostState = {
-  index: number;
+export type GhostState<T> = {
+  item: T;
   top: number;
   left: number;
   width: number;
@@ -43,7 +43,7 @@ type Options<T> = {
 
 export function usePointerDragSort<T>({ items, onReorder }: Options<T>) {
   const itemRefs = useRef<(HTMLElement | null)[]>([]);
-  const [ghost, setGhost] = useState<GhostState | null>(null);
+  const [ghost, setGhost] = useState<GhostState<T> | null>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
 
   const itemsRef = useRef(items);
@@ -51,6 +51,7 @@ export function usePointerDragSort<T>({ items, onReorder }: Options<T>) {
 
   const dragPhaseRef = useRef<"idle" | "pending" | "dragging">("idle");
   const pendingRef = useRef<{
+    item: T;
     index: number;
     x0: number;
     y0: number;
@@ -86,6 +87,7 @@ export function usePointerDragSort<T>({ items, onReorder }: Options<T>) {
       const rect = row.getBoundingClientRect();
 
       pendingRef.current = {
+        item: itemsRef.current[index],
         index,
         x0: e.clientX,
         y0: e.clientY,
@@ -110,7 +112,7 @@ export function usePointerDragSort<T>({ items, onReorder }: Options<T>) {
           document.body.style.touchAction = "none";
           document.body.style.userSelect = "none";
           setGhost({
-            index: pending.index,
+            item: pending.item,
             top: ev.clientY - pending.offsetY,
             left: ev.clientX - pending.offsetX,
             width: pending.width,

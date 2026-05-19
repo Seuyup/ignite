@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useCallback, useRef, useState } from "react";
+import { useActionState, useCallback, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { updateHomeImagesAction, type HomeFormState } from "@/lib/actions/home-actions";
 import { postAdminImageUpload } from "@/lib/admin-upload-xhr";
@@ -45,6 +45,15 @@ export function AdminHomeForm({ initialImages, initialSeo }: Props) {
     onReorder,
   });
 
+  const initialUrls = useMemo(() => initialImages.map((img) => img.url), [initialImages]);
+  const movedIndexes = useMemo(() => {
+    const s = new Set<number>();
+    images.forEach((img, i) => {
+      if (initialUrls[i] !== img.url) s.add(i);
+    });
+    return s;
+  }, [images, initialUrls]);
+
   const handleFileUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setUploading(true);
@@ -75,13 +84,11 @@ export function AdminHomeForm({ initialImages, initialSeo }: Props) {
     setImages(images.map((img, i) => (i === index ? { ...img, link } : img)));
   };
 
-  const ghostImage = ghost ? images[ghost.index] : null;
-
   return (
     <form action={formAction} className="space-y-6">
       <input type="hidden" name="images" value={JSON.stringify(images)} />
 
-      {typeof document !== "undefined" && ghost && ghostImage
+      {typeof document !== "undefined" && ghost
         ? createPortal(
             <div
               className="pointer-events-none fixed z-[9999] rounded-lg border border-neutral-300 bg-white p-3 shadow-lg ring-1 ring-black/10"
@@ -93,9 +100,9 @@ export function AdminHomeForm({ initialImages, initialSeo }: Props) {
                 </span>
                 <div className="h-12 w-20 flex-shrink-0 overflow-hidden rounded bg-neutral-100">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={ghostImage.url} alt="" className="h-full w-full object-cover" />
+                  <img src={ghost.item.url} alt="" className="h-full w-full object-cover" />
                 </div>
-                <p className="min-w-0 flex-1 truncate text-xs text-neutral-600">{ghostImage.url}</p>
+                <p className="min-w-0 flex-1 truncate text-xs text-neutral-600">{ghost.item.url}</p>
               </div>
             </div>,
             document.body,
@@ -109,7 +116,12 @@ export function AdminHomeForm({ initialImages, initialSeo }: Props) {
             ref={setItemRef(i)}
             data-drag-item
             style={draggingIndex === i ? { opacity: 0.3 } : undefined}
-            className="rounded-lg border border-neutral-200 bg-white p-3"
+            className={[
+              "rounded-lg border p-3",
+              movedIndexes.has(i)
+                ? "border-sky-300 bg-sky-500/[0.12]"
+                : "border-neutral-200 bg-white",
+            ].join(" ")}
           >
             <div className="flex items-center gap-3">
               <button
