@@ -6,6 +6,7 @@ import {
 } from "@/lib/ignite-data";
 import { sanitizeRichHtml } from "@/lib/sanitize-html";
 import { ContactForm } from "@/components/ContactForm";
+import { DEFAULT_OG_IMAGE } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -14,19 +15,20 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = seo.title || "Contact";
   const description =
     seo.description || "IGNITE에 프로젝트 문의, 채용, 협업 제안을 보내주세요.";
+  const ogImage = seo.ogImage || DEFAULT_OG_IMAGE;
   return {
     title,
     description,
     openGraph: {
       title,
       description,
-      ...(seo.ogImage ? { images: [{ url: seo.ogImage, width: 1200, height: 630 }] } : {}),
+      images: [{ url: ogImage, width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      ...(seo.ogImage ? { images: [seo.ogImage] } : {}),
+      images: [ogImage],
     },
   };
 }

@@ -23,6 +23,7 @@ export async function POST(request: Request) {
   const page = typeof o.page === "number" ? o.page : Number(o.page);
   const limit = typeof o.limit === "number" ? o.limit : Number(o.limit);
   const q = typeof o.q === "string" ? o.q : "";
+  const category = typeof o.category === "string" ? o.category : "";
   const orderedIds = Array.isArray(o.orderedIds)
     ? o.orderedIds.map((x) => String(x))
     : null;
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
     page: Math.floor(page),
     limit: Math.floor(limit),
     search: q,
+    menu_id: category || undefined,
     orderedIds,
   });
   if (!result.ok) {

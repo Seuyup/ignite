@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { postAdminImageUpload } from "@/lib/admin-upload-xhr";
 import {
@@ -14,6 +15,27 @@ import { DEFAULT_META_LABELS } from "@/lib/project-types";
 import { AdminSlugField } from "@/components/admin/AdminSlugField";
 import { AdminSaveSuccessDialog } from "@/components/admin/AdminSaveSuccessDialog";
 import { AdminSavingOverlay } from "@/components/admin/AdminSavingOverlay";
+import { usePointerDragSort } from "@/hooks/usePointerDragSort";
+
+function DragGripIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className={className}
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8 10L12 6l4 4M8 14l4 4 4-4"
+      />
+    </svg>
+  );
+}
 
 const initial: ProjectFormState = { error: null };
 
@@ -69,16 +91,12 @@ export function ProjectForm(props: Props) {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const onReorderImages = useCallback((next: string[]) => setImages(next), []);
+  const { ghost: imgGhost, draggingIndex: imgDraggingIndex, onPointerDown: imgPointerDown, setItemRef: setImgItemRef } =
+    usePointerDragSort({ items: images, onReorder: onReorderImages });
+
   const removeImage = (index: number) => {
     setImages(images.filter((_, i) => i !== index));
-  };
-
-  const moveImage = (index: number, direction: "up" | "down") => {
-    const arr = [...images];
-    const target = direction === "up" ? index - 1 : index + 1;
-    if (target < 0 || target >= arr.length) return;
-    [arr[index], arr[target]] = [arr[target], arr[index]];
-    setImages(arr);
   };
 
   const addMeta = () => {
@@ -168,12 +186,48 @@ export function ProjectForm(props: Props) {
         <label className="block text-xs uppercase tracking-[0.12em] text-neutral-500">
           이미지 (첫 번째가 대표 이미지)
         </label>
-        <div className="mt-3 space-y-2">
+
+        {typeof document !== "undefined" && imgGhost && images[imgGhost.index]
+          ? createPortal(
+              <div
+                className="pointer-events-none fixed z-[9999] rounded-lg border border-neutral-300 bg-white p-2 shadow-lg ring-1 ring-black/10"
+                style={{ top: imgGhost.top, left: imgGhost.left, width: imgGhost.width }}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="flex h-8 w-8 items-center justify-center text-neutral-400">
+                    <DragGripIcon className="h-5 w-5" />
+                  </span>
+                  <div className="h-10 w-16 flex-shrink-0 overflow-hidden rounded bg-neutral-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={images[imgGhost.index]} alt="" className="h-full w-full object-cover" />
+                  </div>
+                  <span className="min-w-0 flex-1 truncate text-xs text-neutral-600">
+                    {imgGhost.index === 0 && <span className="mr-2 rounded bg-neutral-900 px-1.5 py-0.5 text-[10px] text-white">대표</span>}
+                    {images[imgGhost.index]}
+                  </span>
+                </div>
+              </div>,
+              document.body,
+            )
+          : null}
+
+        <div className={`mt-3 space-y-2${imgGhost ? " select-none" : ""}`}>
           {images.map((url, i) => (
             <div
               key={i}
+              ref={setImgItemRef(i)}
+              data-drag-item
+              style={imgDraggingIndex === i ? { opacity: 0.3 } : undefined}
               className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-2"
             >
+              <button
+                type="button"
+                aria-label="순서 이동"
+                onPointerDown={(e) => imgPointerDown(i, e)}
+                className="flex h-8 w-8 flex-shrink-0 cursor-grab items-center justify-center rounded-lg border border-dashed border-neutral-300 bg-neutral-50 text-neutral-500 transition-colors hover:border-neutral-400 hover:bg-neutral-100 active:cursor-grabbing"
+              >
+                <DragGripIcon className="h-5 w-5" />
+              </button>
               <div className="h-10 w-16 flex-shrink-0 overflow-hidden rounded bg-neutral-100">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={url} alt="" className="h-full w-full object-cover" />
@@ -182,31 +236,13 @@ export function ProjectForm(props: Props) {
                 {i === 0 && <span className="mr-2 rounded bg-neutral-900 px-1.5 py-0.5 text-[10px] text-white">대표</span>}
                 {url}
               </span>
-              <div className="flex gap-1">
-                <button
-                  type="button"
-                  onClick={() => moveImage(i, "up")}
-                  disabled={i === 0}
-                  className="rounded p-1 text-xs text-neutral-400 hover:text-neutral-700 disabled:opacity-30"
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  onClick={() => moveImage(i, "down")}
-                  disabled={i === images.length - 1}
-                  className="rounded p-1 text-xs text-neutral-400 hover:text-neutral-700 disabled:opacity-30"
-                >
-                  ↓
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removeImage(i)}
-                  className="rounded p-1 text-xs text-red-400 hover:text-red-600"
-                >
-                  ✕
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => removeImage(i)}
+                className="rounded p-1 text-xs text-red-400 hover:text-red-600"
+              >
+                ✕
+              </button>
             </div>
           ))}
         </div>

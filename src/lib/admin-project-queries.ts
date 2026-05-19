@@ -204,19 +204,23 @@ export async function reorderProjectsOnPage(options: {
   page: number;
   limit: number;
   search?: string;
+  menu_id?: string;
   orderedIds: string[];
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
     await connectDB();
     await ensureProjectListFields();
 
-    const { page, limit, search, orderedIds } = options;
+    const { page, limit, search, menu_id, orderedIds } = options;
     const safeLimit = LIMIT_OPTIONS.includes(limit as (typeof LIMIT_OPTIONS)[number])
       ? limit
       : 10;
     const safePage = Math.max(1, page);
 
     const filter: Record<string, unknown> = { ...ACTIVE };
+    if (menu_id && menu_id.trim()) {
+      filter.menu_id = menu_id.trim();
+    }
     if (search && search.trim()) {
       filter.title = { $regex: escapeRegex(search.trim()), $options: "i" };
     }
@@ -230,8 +234,17 @@ export async function reorderProjectsOnPage(options: {
     const end = start + safeLimit;
     const pageSlice = fullIds.slice(start, end);
 
-    if (orderedIds.length !== pageSlice.length) {
-      return { ok: false, error: "순서 정보가 목록과 일치하지 않습니다." };
+    const pageSet = new Set(pageSlice);
+    const orderedSet = new Set(orderedIds);
+    if (
+      orderedIds.length !== pageSlice.length ||
+      orderedIds.some((id) => !pageSet.has(id)) ||
+      pageSlice.some((id) => !orderedSet.has(id))
+    ) {
+      return {
+        ok: false,
+        error: `순서 정보가 목록과 일치하지 않습니다. (서버: ${pageSlice.length}건, 요청: ${orderedIds.length}건)`,
+      };
     }
 
     const merged = [...fullIds.slice(0, start), ...orderedIds, ...fullIds.slice(end)];

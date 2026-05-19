@@ -8,6 +8,7 @@ import {
 import { sanitizeRichHtml } from "@/lib/sanitize-html";
 import StudioMapLoader from "@/components/StudioMapLoader";
 import type { NaverMapType } from "@/lib/map-tiles";
+import { DEFAULT_OG_IMAGE } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -15,19 +16,20 @@ export async function generateMetadata(): Promise<Metadata> {
   const seo = await getIgniteSeo(IGNITE_TYPE_STUDIO);
   const title = seo.title || "Studio";
   const description = seo.description || "IGNITE 건축 스튜디오 소개 및 위치 안내.";
+  const ogImage = seo.ogImage || DEFAULT_OG_IMAGE;
   return {
     title,
     description,
     openGraph: {
       title,
       description,
-      ...(seo.ogImage ? { images: [{ url: seo.ogImage, width: 1200, height: 630 }] } : {}),
+      images: [{ url: ogImage, width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      ...(seo.ogImage ? { images: [seo.ogImage] } : {}),
+      images: [ogImage],
     },
   };
 }

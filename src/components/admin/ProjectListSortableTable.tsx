@@ -27,6 +27,7 @@ type Props = {
   page: number;
   limit: number;
   q: string;
+  category?: string;
   trashCount: number;
 };
 
@@ -187,6 +188,7 @@ export function ProjectListSortableTable({
   page,
   limit,
   q,
+  category,
   trashCount,
 }: Props) {
   const router = useRouter();
@@ -249,6 +251,7 @@ export function ProjectListSortableTable({
             page,
             limit,
             q,
+            category: category || "",
             orderedIds: newOrder,
           }),
         });

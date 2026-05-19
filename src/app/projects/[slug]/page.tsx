@@ -9,6 +9,7 @@ import {
   getProjectDetailsByMenuId,
 } from "@/lib/project-queries";
 import { getProjectCategories, getIgniteSeoById } from "@/lib/ignite-data";
+import { DEFAULT_OG_IMAGE } from "@/lib/constants";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -23,21 +24,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const seo = await getIgniteSeoById(category.id);
     const title = seo.title || category.label;
     const description = seo.description || undefined;
+    const ogImage = seo.ogImage || DEFAULT_OG_IMAGE;
     return {
       title,
       ...(description ? { description } : {}),
       openGraph: {
         title,
         ...(description ? { description } : {}),
-        ...(seo.ogImage
-          ? { images: [{ url: seo.ogImage, width: 1200, height: 630 }] }
-          : {}),
+        images: [{ url: ogImage, width: 1200, height: 630 }],
       },
       twitter: {
         card: "summary_large_image",
         title,
         ...(description ? { description } : {}),
-        ...(seo.ogImage ? { images: [seo.ogImage] } : {}),
+        images: [ogImage],
       },
     };
   }
@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const project = await getProjectBySlug(slug);
   if (!project) return { title: "Project" };
 
-  const ogImage = project.coverImageUrl || project.images[0] || null;
+  const ogImage = project.coverImageUrl || project.images[0] || DEFAULT_OG_IMAGE;
   return {
     title: project.title,
     description: [project.sub_title_1, project.sub_title_2]
@@ -56,14 +56,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: [project.sub_title_1, project.sub_title_2]
         .filter(Boolean)
         .join(" — ") || undefined,
-      ...(ogImage
-        ? { images: [{ url: ogImage, width: 1200, height: 630, alt: project.title }] }
-        : {}),
+      images: [{ url: ogImage, width: 1200, height: 630, alt: project.title }],
     },
     twitter: {
       card: "summary_large_image",
       title: project.title,
-      ...(ogImage ? { images: [ogImage] } : {}),
+      images: [ogImage],
     },
   };
 }

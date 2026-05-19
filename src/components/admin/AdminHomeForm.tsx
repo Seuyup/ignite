@@ -1,12 +1,34 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useCallback, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { updateHomeImagesAction, type HomeFormState } from "@/lib/actions/home-actions";
 import { postAdminImageUpload } from "@/lib/admin-upload-xhr";
 import { AdminSeoFields } from "@/components/admin/AdminSeoFields";
+import { usePointerDragSort } from "@/hooks/usePointerDragSort";
 import type { HomeImage, IgniteSeo } from "@/lib/ignite-data";
 
 const initial: HomeFormState = { error: null };
+
+function DragGripIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.5}
+      stroke="currentColor"
+      className={className}
+      aria-hidden
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8 10L12 6l4 4M8 14l4 4 4-4"
+      />
+    </svg>
+  );
+}
 
 type Props = { initialImages: HomeImage[]; initialSeo: IgniteSeo };
 
@@ -16,6 +38,12 @@ export function AdminHomeForm({ initialImages, initialSeo }: Props) {
   const [state, formAction, pending] = useActionState(updateHomeImagesAction, initial);
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+
+  const onReorder = useCallback((next: HomeImage[]) => setImages(next), []);
+  const { ghost, draggingIndex, onPointerDown, setItemRef } = usePointerDragSort({
+    items: images,
+    onReorder,
+  });
 
   const handleFileUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -43,59 +71,67 @@ export function AdminHomeForm({ initialImages, initialSeo }: Props) {
     setImages(images.filter((_, i) => i !== index));
   };
 
-  const moveImage = (index: number, direction: "up" | "down") => {
-    const next = [...images];
-    const target = direction === "up" ? index - 1 : index + 1;
-    if (target < 0 || target >= next.length) return;
-    [next[index], next[target]] = [next[target], next[index]];
-    setImages(next);
-  };
-
   const updateLink = (index: number, link: string) => {
     setImages(images.map((img, i) => (i === index ? { ...img, link } : img)));
   };
+
+  const ghostImage = ghost ? images[ghost.index] : null;
 
   return (
     <form action={formAction} className="space-y-6">
       <input type="hidden" name="images" value={JSON.stringify(images)} />
 
-      <div className="space-y-3">
+      {typeof document !== "undefined" && ghost && ghostImage
+        ? createPortal(
+            <div
+              className="pointer-events-none fixed z-[9999] rounded-lg border border-neutral-300 bg-white p-3 shadow-lg ring-1 ring-black/10"
+              style={{ top: ghost.top, left: ghost.left, width: ghost.width }}
+            >
+              <div className="flex items-center gap-3">
+                <span className="flex h-8 w-8 items-center justify-center text-neutral-400">
+                  <DragGripIcon className="h-5 w-5" />
+                </span>
+                <div className="h-12 w-20 flex-shrink-0 overflow-hidden rounded bg-neutral-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={ghostImage.url} alt="" className="h-full w-full object-cover" />
+                </div>
+                <p className="min-w-0 flex-1 truncate text-xs text-neutral-600">{ghostImage.url}</p>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+
+      <div className={`space-y-3${ghost ? " select-none" : ""}`}>
         {images.map((img, i) => (
           <div
             key={i}
+            ref={setItemRef(i)}
+            data-drag-item
+            style={draggingIndex === i ? { opacity: 0.3 } : undefined}
             className="rounded-lg border border-neutral-200 bg-white p-3"
           >
             <div className="flex items-center gap-3">
+              <button
+                type="button"
+                aria-label="순서 이동"
+                onPointerDown={(e) => onPointerDown(i, e)}
+                className="flex h-8 w-8 flex-shrink-0 cursor-grab items-center justify-center rounded-lg border border-dashed border-neutral-300 bg-neutral-50 text-neutral-500 transition-colors hover:border-neutral-400 hover:bg-neutral-100 active:cursor-grabbing"
+              >
+                <DragGripIcon className="h-5 w-5" />
+              </button>
               <div className="h-12 w-20 flex-shrink-0 overflow-hidden rounded bg-neutral-100">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={img.url} alt="" className="h-full w-full object-cover" />
               </div>
               <p className="min-w-0 flex-1 truncate text-xs text-neutral-600">{img.url}</p>
-              <div className="flex gap-1">
-                <button
-                  type="button"
-                  onClick={() => moveImage(i, "up")}
-                  disabled={i === 0}
-                  className="rounded p-1 text-neutral-400 hover:text-neutral-700 disabled:opacity-30"
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  onClick={() => moveImage(i, "down")}
-                  disabled={i === images.length - 1}
-                  className="rounded p-1 text-neutral-400 hover:text-neutral-700 disabled:opacity-30"
-                >
-                  ↓
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removeImage(i)}
-                  className="rounded p-1 text-red-400 hover:text-red-600"
-                >
-                  ✕
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => removeImage(i)}
+                className="rounded p-1 text-red-400 hover:text-red-600"
+              >
+                ✕
+              </button>
             </div>
             <div className="mt-2 flex items-center gap-2">
               <span className="flex-shrink-0 text-xs text-neutral-400">/</span>

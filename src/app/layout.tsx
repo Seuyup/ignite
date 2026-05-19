@@ -3,6 +3,7 @@ import { DM_Sans } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
+import { DEFAULT_OG_IMAGE } from "@/lib/constants";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -12,7 +13,6 @@ const dmSans = DM_Sans({
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.ignitearch.co.kr";
-const OG_IMAGE = `${SITE_URL}/og-default.png`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
       "WE MAY SEE THE SAME THING but WE THINK DIFFERENTLY — architecture and spatial design studio.",
     images: [
       {
-        url: OG_IMAGE,
+        url: DEFAULT_OG_IMAGE,
         width: 1200,
         height: 630,
         alt: "IGNITE Architecture",
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
     title: "IGNITE — Architecture & Spatial Design Studio",
     description:
       "WE MAY SEE THE SAME THING but WE THINK DIFFERENTLY — architecture and spatial design studio.",
-    images: [OG_IMAGE],
+    images: [DEFAULT_OG_IMAGE],
   },
   robots: {
     index: true,

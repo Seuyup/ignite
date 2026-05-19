@@ -167,6 +167,7 @@ export default async function AdminProjectListPage({ searchParams }: Props) {
           page={safePage}
           limit={limit}
           q={q}
+          category={category || undefined}
           trashCount={trashCount}
         />
       )}
