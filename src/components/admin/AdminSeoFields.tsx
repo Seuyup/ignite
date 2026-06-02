@@ -1,20 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import type { IgniteSeo } from "@/lib/ignite-data";
 
 type Props = {
   initial: IgniteSeo;
   pageName: string;
+  children?: ReactNode;
 };
 
-export function AdminSeoFields({ initial, pageName }: Props) {
+export function AdminSeoFields({ initial, pageName, children }: Props) {
   const [title, setTitle] = useState(initial.title);
   const [description, setDescription] = useState(initial.description);
   const [ogImage, setOgImage] = useState(initial.ogImage);
 
   return (
-    <section className="rounded-lg border border-neutral-200 p-5">
+    <section className="rounded-lg border border-rose-200 bg-rose-50/60 p-5">
       <h2 className="mb-1 text-sm font-medium text-neutral-700">
         SEO 설정
       </h2>
@@ -97,6 +98,7 @@ export function AdminSeoFields({ initial, pageName }: Props) {
           )}
         </div>
       </div>
+      {children}
     </section>
   );
 }

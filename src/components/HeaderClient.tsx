@@ -8,9 +8,9 @@ import type { NavItem } from "@/lib/navigation";
 const SCROLL_THRESHOLD = 10;
 const CATEGORIES = new Set(["architecture", "interior"]);
 
-type Props = { navItems: NavItem[] };
+type Props = { navItems: NavItem[]; logoHtml?: string };
 
-export function HeaderClient({ navItems }: Props) {
+export function HeaderClient({ navItems, logoHtml }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   /** 링크 이동·메뉴 닫기 시 리마운트 → 하위 아코디언 전부 접힘 */
   const [navListKey, setNavListKey] = useState(0);
@@ -81,13 +81,19 @@ export function HeaderClient({ navItems }: Props) {
         <div className="flex items-center justify-between px-6 py-5 md:px-10">
           <Link
             href="/"
-            className="relative z-[60] text-[1.5rem] font-medium tracking-tight text-neutral-900"
+            className="relative z-[60]"
             onClick={() => {
               setMenuOpen(false);
               setNavListKey((k) => k + 1);
             }}
           >
-            IGNITE
+            {logoHtml ? (
+              <span dangerouslySetInnerHTML={{ __html: logoHtml }} />
+            ) : (
+              <span className="text-[1.5rem] font-medium tracking-tight text-neutral-900">
+                IGNITE
+              </span>
+            )}
           </Link>
           <button
             type="button"

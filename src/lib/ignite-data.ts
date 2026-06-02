@@ -295,13 +295,17 @@ export async function getStudioForAdmin(): Promise<{
 
 export type HomeImage = { url: string; link: string };
 
-export async function getHomeImages(): Promise<HomeImage[]> {
-  const body = await getIgniteBody(IGNITE_TYPE_HOME);
-  if (!body.trim()) return [];
-  try {
-    const parsed = JSON.parse(body);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map((item: unknown) => {
+export type HomeContents = {
+  logoHtml: string;
+  images: HomeImage[];
+};
+
+const EMPTY_HOME_CONTENTS: HomeContents = { logoHtml: "", images: [] };
+
+function normalizeHomeImages(raw: unknown): HomeImage[] {
+  const arr = Array.isArray(raw) ? raw : [];
+  return arr
+    .map((item: unknown) => {
       if (typeof item === "string") return { url: item, link: "" };
       if (item && typeof item === "object" && "url" in item) {
         const obj = item as Record<string, unknown>;
@@ -311,19 +315,65 @@ export async function getHomeImages(): Promise<HomeImage[]> {
         };
       }
       return null;
-    }).filter((v): v is HomeImage => v !== null && v.url.trim().length > 0);
-  } catch {
-    /* ignore */
+    })
+    .filter((v): v is HomeImage => v !== null && v.url.trim().length > 0);
+}
+
+function parseHomeContents(raw: unknown): HomeContents {
+  if (raw == null) return { ...EMPTY_HOME_CONTENTS };
+
+  if (Array.isArray(raw)) {
+    return { logoHtml: "", images: normalizeHomeImages(raw) };
   }
-  return [];
+
+  if (typeof raw === "object") {
+    const obj = raw as Record<string, unknown>;
+    return {
+      logoHtml: typeof obj.logoHtml === "string" ? obj.logoHtml : "",
+      images: normalizeHomeImages(obj.images),
+    };
+  }
+
+  return { ...EMPTY_HOME_CONTENTS };
+}
+
+async function getHomeContentsDoc(): Promise<HomeContents> {
+  try {
+    await connectDB();
+    const doc = await Ignite.findOne({ type: IGNITE_TYPE_HOME }).lean();
+    if (!doc) return { ...EMPTY_HOME_CONTENTS };
+    return parseHomeContents((doc as { contents?: unknown }).contents);
+  } catch {
+    return { ...EMPTY_HOME_CONTENTS };
+  }
+}
+
+export async function getHomeImages(): Promise<HomeImage[]> {
+  const { images } = await getHomeContentsDoc();
+  return images;
+}
+
+export async function getHomeLogoHtml(): Promise<string> {
+  const { logoHtml } = await getHomeContentsDoc();
+  return logoHtml;
 }
 
 export async function getHomeImagesForAdmin(): Promise<HomeImage[]> {
   return getHomeImages();
 }
 
+export async function upsertHomeContents(data: HomeContents): Promise<void> {
+  await connectDB();
+  await Ignite.findOneAndUpdate(
+    { type: IGNITE_TYPE_HOME },
+    { $set: { contents: data } },
+    { upsert: true, new: true },
+  );
+}
+
 export async function upsertHomeImages(images: HomeImage[]): Promise<void> {
-  await upsertIgniteBody(IGNITE_TYPE_HOME, JSON.stringify(images));
+  const current = await getHomeContentsDoc();
+  await upsertHomeContents({ ...current, images });
 }
 
 /* ── Contact ── */
@@ -344,14 +394,15 @@ export async function getContactForAdmin(): Promise<{
 }
 
 export async function getHomeForAdmin(): Promise<{
+  logoHtml: string;
   images: HomeImage[];
   seo: IgniteSeo;
 }> {
-  const [images, seo] = await Promise.all([
-    getHomeImages(),
+  const [contents, seo] = await Promise.all([
+    getHomeContentsDoc(),
     getIgniteSeo(IGNITE_TYPE_HOME),
   ]);
-  return { images, seo };
+  return { logoHtml: contents.logoHtml, images: contents.images, seo };
 }
 
 /* ── Individual Pages ── */

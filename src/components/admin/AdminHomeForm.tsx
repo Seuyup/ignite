@@ -30,9 +30,10 @@ function DragGripIcon({ className }: { className?: string }) {
   );
 }
 
-type Props = { initialImages: HomeImage[]; initialSeo: IgniteSeo };
+type Props = { initialLogoHtml: string; initialImages: HomeImage[]; initialSeo: IgniteSeo };
 
-export function AdminHomeForm({ initialImages, initialSeo }: Props) {
+export function AdminHomeForm({ initialLogoHtml, initialImages, initialSeo }: Props) {
+  const [logoHtml, setLogoHtml] = useState(initialLogoHtml);
   const [images, setImages] = useState<HomeImage[]>(initialImages);
   const [newUrl, setNewUrl] = useState("");
   const [state, formAction, pending] = useActionState(updateHomeImagesAction, initial);
@@ -86,7 +87,40 @@ export function AdminHomeForm({ initialImages, initialSeo }: Props) {
 
   return (
     <form action={formAction} className="space-y-6">
+      <input type="hidden" name="logoHtml" value={logoHtml} />
       <input type="hidden" name="images" value={JSON.stringify(images)} />
+
+      {/* ── 헤더 로고 ── */}
+      <section className="rounded-lg border border-neutral-200 p-5">
+        <h2 className="mb-1 text-sm font-medium text-neutral-700">
+          헤더 로고 HTML
+        </h2>
+        <p className="mb-4 text-xs text-neutral-400">
+          헤더 좌측 로고 영역에 표시될 HTML을 입력합니다. (예: &lt;span&gt;IGNITE&lt;/span&gt;)
+        </p>
+        <textarea
+          value={logoHtml}
+          onChange={(e) => setLogoHtml(e.target.value)}
+          rows={3}
+          placeholder='<span class="text-[1.5rem] font-medium tracking-tight text-neutral-900">IGNITE</span>'
+          className="w-full rounded border border-neutral-300 px-3 py-2 font-mono text-sm text-neutral-700 outline-none placeholder:text-neutral-300 focus:border-neutral-500 focus:outline-none"
+        />
+        {logoHtml.trim() && (
+          <div className="mt-2 rounded border border-dashed border-neutral-200 bg-neutral-50 px-3 py-2">
+            <span className="mb-1 block text-[10px] text-neutral-400">미리보기</span>
+            <span dangerouslySetInnerHTML={{ __html: logoHtml }} />
+          </div>
+        )}
+      </section>
+
+      {/* ── 슬라이드쇼 이미지 ── */}
+      <section className="rounded-lg border border-neutral-200 p-5">
+        <h2 className="mb-1 text-sm font-medium text-neutral-700">
+          슬라이드쇼 이미지
+        </h2>
+        <p className="mb-4 text-xs text-neutral-400">
+          홈 화면에 표시될 슬라이드쇼 이미지를 관리합니다. 드래그하여 순서를 변경할 수 있습니다.
+        </p>
 
       {typeof document !== "undefined" && ghost
         ? createPortal(
@@ -201,6 +235,7 @@ export function AdminHomeForm({ initialImages, initialSeo }: Props) {
           추가
         </button>
       </div>
+      </section>
 
       <AdminSeoFields initial={initialSeo} pageName="Home" />
 

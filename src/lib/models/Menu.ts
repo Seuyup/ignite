@@ -8,7 +8,7 @@ import { Schema, models, model } from "mongoose";
  *   sort: "child_menu" → 하위 메뉴 (예: type="architecture", parent_id로 상위 참조)
  *
  * 콘텐츠:
- *   type: "home" → body에 JSON (이미지 URL 배열)
+ *   type: "home" → contents에 object 배열 (이미지 URL + 링크), body는 레거시 폴백
  *   type: "studio" → bodyTop / bodyBottom에 HTML (지도 상하단)
  *
  * 개별 페이지:
@@ -28,6 +28,7 @@ const menuSchema = new Schema(
     },
     title: { type: String, default: "" },
     body: { type: String, default: "" },
+    contents: { type: Schema.Types.Mixed, default: null },
     bodyTop: { type: String, default: "" },
     bodyBottom: { type: String, default: "" },
     sort: {

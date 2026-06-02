@@ -54,7 +54,7 @@ export function AdminIndividualForm({
     >
       {id && <input type="hidden" name="id" value={id} />}
 
-      <div className="rounded-lg border border-neutral-200 p-5">
+      <section className="rounded-lg border border-neutral-200 p-5">
         <h2 className="mb-4 text-sm font-medium text-neutral-700">
           페이지 기본 정보
         </h2>
@@ -104,9 +104,9 @@ export function AdminIndividualForm({
             />
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="rounded-lg border border-neutral-200 p-5">
+      <section className="rounded-lg border border-blue-200 bg-blue-50/60 p-5">
         <h2 className="mb-4 text-sm font-medium text-neutral-700">
           콘텐츠 (HTML)
         </h2>
@@ -115,7 +115,7 @@ export function AdminIndividualForm({
           initialHtml={initialBody}
         />
         <input type="hidden" name="body" defaultValue={initialBody} />
-      </div>
+      </section>
 
       <AdminSeoFields initial={initialSeo} pageName={title || "개별 페이지"} />
 

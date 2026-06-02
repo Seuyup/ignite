@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/admin-guard";
 import {
-  upsertHomeImages,
+  upsertHomeContents,
   upsertIgniteSeo,
   IGNITE_TYPE_HOME,
   type HomeImage,
@@ -19,6 +19,8 @@ export async function updateHomeImagesAction(
   formData: FormData,
 ): Promise<HomeFormState> {
   await assertAdmin();
+
+  const logoHtml = formData.get("logoHtml")?.toString() ?? "";
 
   const imagesJson = formData.get("images")?.toString() ?? "[]";
   let images: HomeImage[] = [];
@@ -48,7 +50,7 @@ export async function updateHomeImagesAction(
   const seoOgImage = formData.get("seoOgImage")?.toString() ?? "";
 
   try {
-    await upsertHomeImages(images);
+    await upsertHomeContents({ logoHtml, images });
     await upsertIgniteSeo(IGNITE_TYPE_HOME, {
       title: seoTitle,
       description: seoDescription,
@@ -59,5 +61,6 @@ export async function updateHomeImagesAction(
   }
 
   revalidatePath("/");
+  revalidatePath("/admin/home");
   return { error: null, saved: true };
 }

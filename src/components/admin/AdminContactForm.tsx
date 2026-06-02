@@ -32,7 +32,7 @@ export function AdminContactForm({ initialBody, initialSeo }: Props) {
   return (
     <form
       action={formAction}
-      className="space-y-8"
+      className="space-y-6"
       onSubmit={(e) => {
         const form = e.currentTarget;
         const el = form.elements.namedItem("body");
@@ -41,11 +41,11 @@ export function AdminContactForm({ initialBody, initialSeo }: Props) {
         }
       }}
     >
-      <div className="rounded-lg border border-neutral-200 p-5">
-        <h2 className="mb-4 text-sm font-medium text-neutral-700">
+      <section className="rounded-lg border border-amber-200 bg-amber-50/60 p-5">
+        <h2 className="mb-1 text-sm font-medium text-neutral-700">
           하단 콘텐츠 (HTML)
         </h2>
-        <p className="mb-4 text-xs text-neutral-500">
+        <p className="mb-4 text-xs text-neutral-400">
           Contact 페이지 문의 폼 아래에 표시될 HTML 콘텐츠를 편집합니다.
           비워두면 추가 영역이 표시되지 않습니다.
         </p>
@@ -54,7 +54,7 @@ export function AdminContactForm({ initialBody, initialSeo }: Props) {
           initialHtml={initialBody}
         />
         <input type="hidden" name="body" defaultValue={initialBody} />
-      </div>
+      </section>
 
       <AdminSeoFields initial={initialSeo} pageName="Contact" />
 
