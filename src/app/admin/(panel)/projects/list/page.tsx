@@ -107,14 +107,16 @@ export default async function AdminProjectListPage({ searchParams }: Props) {
         </p>
       </div>
 
-      <section className="mt-8 rounded-lg border border-neutral-200 p-5">
-        <h2 className="mb-1 text-sm font-medium text-neutral-700">검색</h2>
+      <section className="mt-6 rounded-lg border border-neutral-200 p-5">
+        <h2 className="mb-1 text-sm font-medium text-neutral-700">프로젝트 목록</h2>
         <p className="mb-4 text-xs text-neutral-400">
-          제목 키워드로 프로젝트를 필터링합니다.
+          드래그로 순서를 변경한 뒤 &ldquo;순서 저장&rdquo;을 눌러 반영합니다.
         </p>
+
         <form
           method="get"
           action={base}
+          className="mb-4"
         >
           <input type="hidden" name="page" value="1" />
           <input type="hidden" name="limit" value={String(limit)} />
@@ -138,13 +140,6 @@ export default async function AdminProjectListPage({ searchParams }: Props) {
             </button>
           </div>
         </form>
-      </section>
-
-      <section className="mt-6 rounded-lg border border-neutral-200 p-5">
-        <h2 className="mb-1 text-sm font-medium text-neutral-700">프로젝트 목록</h2>
-        <p className="mb-4 text-xs text-neutral-400">
-          드래그로 순서를 변경한 뒤 &ldquo;순서 저장&rdquo;을 눌러 반영합니다.
-        </p>
 
         {total === 0 ? (
           <>
