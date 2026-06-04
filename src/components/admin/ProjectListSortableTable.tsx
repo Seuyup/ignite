@@ -265,7 +265,7 @@ export function ProjectListSortableTable({
         setSaving(false);
       }
     },
-    [limit, page, q, router],
+    [category, limit, page, q, router],
   );
 
   const endPointerListenersRef = useRef<(() => void) | null>(null);

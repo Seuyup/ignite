@@ -10,11 +10,8 @@ import { R2Image } from "@/components/R2Image";
 const MIN_SCALE = 1;
 const MAX_SCALE = 4;
 
-function touchDistance(touches: TouchList): number {
-  return Math.hypot(
-    touches[1].clientX - touches[0].clientX,
-    touches[1].clientY - touches[0].clientY,
-  );
+function touchDistance(t0: React.Touch, t1: React.Touch): number {
+  return Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
 }
 
 type Props = {
@@ -74,7 +71,7 @@ export function MobileImageLightbox({
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       setIsGesturing(true);
-      pinchRef.current = { dist: touchDistance(e.touches), scale };
+      pinchRef.current = { dist: touchDistance(e.touches[0], e.touches[1]), scale };
       panRef.current = null;
       return;
     }
@@ -92,7 +89,7 @@ export function MobileImageLightbox({
   const handleTouchMove = (e: React.TouchEvent) => {
     if (e.touches.length === 2 && pinchRef.current) {
       e.preventDefault();
-      const dist = touchDistance(e.touches);
+      const dist = touchDistance(e.touches[0], e.touches[1]);
       const next = Math.min(
         MAX_SCALE,
         Math.max(MIN_SCALE, (pinchRef.current.scale * dist) / pinchRef.current.dist),
