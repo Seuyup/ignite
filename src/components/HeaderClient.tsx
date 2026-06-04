@@ -47,6 +47,15 @@ export function HeaderClient({ navItems, logoHtml }: Props) {
     if (menuOpen) setHidden(false);
   }, [menuOpen]);
 
+  useEffect(() => {
+    if (menuOpen) {
+      document.documentElement.setAttribute("data-menu-open", "");
+    } else {
+      document.documentElement.removeAttribute("data-menu-open");
+    }
+    return () => document.documentElement.removeAttribute("data-menu-open");
+  }, [menuOpen]);
+
   return (
     <>
       {/* Fullscreen menu overlay — outside header to avoid transform context */}
@@ -132,15 +141,13 @@ function NavMenuItem({
 }) {
   const [expanded, setExpanded] = useState(false);
   const hasChildren = item.children && item.children.length > 0;
+  const childLinkClass =
+    "text-xl font-medium tracking-tight text-neutral-700 transition-colors hover:text-neutral-900 hover:underline hover:underline-offset-4 md:text-2xl";
 
   if (!hasChildren) {
     return (
       <li>
-        <Link
-          href={item.href}
-          className="text-xl font-medium tracking-tight text-neutral-700 transition-colors hover:text-neutral-900 hover:underline hover:underline-offset-4 md:text-2xl"
-          onClick={onNavigate}
-        >
+        <Link href={item.href} className={childLinkClass} onClick={onNavigate}>
           {item.label}
         </Link>
       </li>
@@ -149,9 +156,10 @@ function NavMenuItem({
 
   return (
     <li>
+      {/* Mobile: accordion toggle */}
       <button
         type="button"
-        className={`text-xl font-medium tracking-tight transition-colors hover:text-neutral-900 md:text-2xl ${
+        className={`text-xl font-medium tracking-tight transition-colors hover:text-neutral-900 md:hidden md:text-2xl ${
           expanded
             ? "text-neutral-900 underline underline-offset-4"
             : "text-neutral-700 hover:underline hover:underline-offset-4"
@@ -161,18 +169,36 @@ function NavMenuItem({
       >
         {item.label}
       </button>
+
+      {/* Desktop: Projects → first category (e.g. Architecture) */}
+      <Link
+        href={item.href}
+        className={`hidden text-xl font-medium tracking-tight text-neutral-700 transition-colors hover:text-neutral-900 hover:underline hover:underline-offset-4 md:inline md:text-2xl`}
+        onClick={onNavigate}
+      >
+        {item.label}
+      </Link>
+
+      {/* Mobile: collapsible sub-menu */}
       <ul
-        className={`overflow-hidden pl-16 transition-all duration-300 ${
+        className={`overflow-hidden pl-16 transition-all duration-300 md:hidden ${
           expanded ? "mt-3 max-h-96 space-y-4 opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         {item.children!.map((child) => (
           <li key={child.href}>
-            <Link
-              href={child.href}
-              className="text-xl font-medium tracking-tight text-neutral-700 transition-colors hover:text-neutral-900 hover:underline hover:underline-offset-4 md:text-2xl"
-              onClick={onNavigate}
-            >
+            <Link href={child.href} className={childLinkClass} onClick={onNavigate}>
+              {child.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      {/* Desktop: sub-menu always visible */}
+      <ul className="mt-3 hidden space-y-4 pl-16 md:block">
+        {item.children!.map((child) => (
+          <li key={child.href}>
+            <Link href={child.href} className={childLinkClass} onClick={onNavigate}>
               {child.label}
             </Link>
           </li>

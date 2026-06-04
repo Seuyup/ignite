@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { DesktopSideNav } from "@/components/DesktopSideNav";
 import {
   getContactBody,
   getIgniteSeo,
   IGNITE_TYPE_CONTACT,
 } from "@/lib/ignite-data";
+import { getNavItems } from "@/lib/navigation";
 import { sanitizeRichHtml } from "@/lib/sanitize-html";
 import { ContactForm } from "@/components/ContactForm";
 import { DEFAULT_OG_IMAGE } from "@/lib/constants";
@@ -34,7 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ContactPage() {
-  const body = await getContactBody();
+  const [body, navItems] = await Promise.all([getContactBody(), getNavItems()]);
   const trimmed = body.trim();
   const looksLikeHtml = /<\/?[a-z][\s\S]*>/i.test(trimmed);
   const content = looksLikeHtml ? sanitizeRichHtml(body) : null;
@@ -42,16 +44,15 @@ export default async function ContactPage() {
 
   return (
     <div className="min-h-[calc(100dvh-72px)]">
-      <div className="flex flex-col px-6 py-16 md:flex-row md:px-10 md:py-24 lg:px-[90px]">
-        {/* Left - label */}
-        <div className="mb-10 md:mb-0 md:flex-1">
-          <h1 className="text-sm font-medium text-neutral-900 md:sticky md:top-[25vh]">
-            Contact
-          </h1>
-        </div>
+      <div className="flex">
+        <DesktopSideNav navItems={navItems} />
 
-        {/* Right - content */}
-        <div className="w-full md:w-[55%] md:max-w-[680px] md:flex-shrink-0 md:mr-[22%]">
+        <div className="flex flex-1 flex-col px-6 py-16 md:flex-row md:px-10 md:py-24 lg:px-0">
+          <div className="mb-10 md:mb-0 md:hidden">
+            <h1 className="text-sm font-medium text-neutral-900">Contact</h1>
+          </div>
+
+          <div className="w-full md:mx-auto md:w-[55%] md:max-w-[680px] md:flex-shrink-0">
           <div className="space-y-10">
             <p className="text-sm font-medium leading-relaxed text-neutral-900">
               프로젝트를 논의하고 싶으시다면, 전화를 주시거나 아래 양식을 작성해
@@ -76,7 +77,10 @@ export default async function ContactPage() {
               </div>
             )}
           </div>
+          </div>
         </div>
+
+        <div className="hidden w-[230px] flex-shrink-0 md:block" />
       </div>
     </div>
   );

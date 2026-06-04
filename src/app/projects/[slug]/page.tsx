@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DesktopSideNav } from "@/components/DesktopSideNav";
 import { ProjectViewer } from "@/components/ProjectViewer";
 import { ProjectsGrid } from "@/components/ProjectsGrid";
+import { getNavItems } from "@/lib/navigation";
 import {
   getProjectBySlug,
   getProjectsByMenuId,
@@ -73,7 +75,10 @@ export default async function ProjectSlugPage({ params }: Props) {
   const category = categories.find((c) => c.type === slug);
 
   if (category) {
-    const projects = await getProjectsByMenuId(category.id);
+    const [projects, navItems] = await Promise.all([
+      getProjectsByMenuId(category.id),
+      getNavItems(),
+    ]);
     return (
       <div className="min-h-[calc(100dvh-72px)]">
         {/* Mobile: category nav at top (vertical) */}
@@ -93,33 +98,13 @@ export default async function ProjectSlugPage({ params }: Props) {
           ))}
         </nav>
 
-        {/* Desktop: left 200px | center | right 200px */}
         <div className="flex">
-          {/* Left - category nav (desktop) */}
-          <div className="hidden w-[230px] flex-shrink-0 md:block">
-            <nav className="fixed top-[25vh] left-[90px] z-30 space-y-1">
-              {categories.map((cat) => (
-                <Link
-                  key={cat.id}
-                  href={`/projects/${cat.type}`}
-                  className={`block text-sm font-medium text-neutral-900 transition-colors ${
-                    cat.type === slug
-                      ? "underline underline-offset-4"
-                      : "hover:underline hover:underline-offset-4"
-                  }`}
-                >
-                  {cat.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
+          <DesktopSideNav navItems={navItems} />
 
-          {/* Center - project grid */}
           <div className="flex-1 px-6 py-10 md:px-0 md:py-24">
             <ProjectsGrid projects={projects} />
           </div>
 
-          {/* Right - empty space (desktop) */}
           <div className="hidden w-[230px] flex-shrink-0 md:block" />
         </div>
       </div>

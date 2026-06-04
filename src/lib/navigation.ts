@@ -9,13 +9,14 @@ export type NavItem = {
 
 function menuItemToNavItem(item: MenuItem): NavItem {
   if (item.type === "project") {
+    const children = item.children.map((child) => ({
+      label: child.label,
+      href: `/projects/${child.type}`,
+    }));
     return {
       label: "Projects",
-      href: "/projects",
-      children: item.children.map((child) => ({
-        label: child.label,
-        href: `/projects/${child.type}`,
-      })),
+      href: children[0]?.href ?? "/projects/architecture",
+      children,
     };
   }
 
@@ -58,7 +59,7 @@ export async function getNavItems(): Promise<NavItem[]> {
     ? [
         {
           label: "Projects",
-          href: "/projects",
+          href: "/projects/architecture",
           children: [
             { label: "Architecture", href: "/projects/architecture" },
           ],

@@ -37,6 +37,11 @@ body {
   will-change: opacity;
 }
 
+html[data-menu-open] [data-pv-desktop-title] {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .header__toggle.active span:first-child {
   transform: rotate(45deg) translate(2px, 2px);
 }
