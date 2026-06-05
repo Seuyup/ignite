@@ -8,12 +8,13 @@ import "swiper/css";
 import { MobileImageLightbox } from "@/components/MobileImageLightbox";
 import { R2Image } from "@/components/R2Image";
 import { useSlideNav } from "@/hooks/useSlideNav";
+import { useTouchLayout, useVerticalSwipeNav } from "@/hooks/useVerticalSwipeNav";
 import type { ProjectDetail } from "@/lib/projects";
 
 const WHEEL_THRESHOLD = 30;
 
 const PV_CLASSES = {
-  root: "relative h-[calc(100dvh-72px)] w-full bg-[#F5F4F0] md:-mt-[72px] md:h-dvh md:bg-transparent",
+  root: "relative h-[calc(100dvh-72px)] w-full overscroll-y-none bg-[#F5F4F0] md:-mt-[72px] md:h-dvh md:bg-transparent",
   imageShell: "relative h-full min-h-0 overflow-hidden",
   swiperInner: "relative h-full min-h-0 w-full",
   horizontalSlide:
@@ -53,6 +54,7 @@ export function ProjectViewer({ projects, initialIndex }: Props) {
   const [showContent, setShowContent] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
 
+  const rootRef = useRef<HTMLDivElement>(null);
   const imageShellRef = useRef<HTMLDivElement>(null);
   const hSwiperRef = useRef<SwiperType | null>(null);
 
@@ -61,10 +63,20 @@ export function ProjectViewer({ projects, initialIndex }: Props) {
   const images = getProjectImages(currentProject);
   const total = images.length;
 
+  const isTouchLayout = useTouchLayout();
+
   const { navEdge, isMobile, reset, shellProps } = useSlideNav({
     swiperRef: hSwiperRef,
     shellRef: imageShellRef,
     total,
+    disabled: showContent || zoomOpen,
+  });
+
+  useVerticalSwipeNav({
+    shellRef: rootRef,
+    swiperRef: hSwiperRef,
+    total,
+    enabled: isTouchLayout,
     disabled: showContent || zoomOpen,
   });
 
@@ -80,6 +92,13 @@ export function ProjectViewer({ projects, initialIndex }: Props) {
     setShowContent(false);
     setZoomOpen(false);
   }, [isMobile]);
+
+  useEffect(() => {
+    document.body.style.overscrollBehaviorY = "none";
+    return () => {
+      document.body.style.overscrollBehaviorY = "";
+    };
+  }, []);
 
   useEffect(() => {
     const shell = imageShellRef.current;
@@ -104,7 +123,7 @@ export function ProjectViewer({ projects, initialIndex }: Props) {
     .join(" / ");
 
   return (
-    <div className={PV_CLASSES.root}>
+    <div ref={rootRef} className={PV_CLASSES.root}>
       <div
         ref={imageShellRef}
         className={PV_CLASSES.imageShell}
@@ -115,7 +134,7 @@ export function ProjectViewer({ projects, initialIndex }: Props) {
             <div className={PV_CLASSES.swiperInner}>
               <Swiper
                 loop={total > 1}
-                allowTouchMove={isMobile}
+                allowTouchMove={isTouchLayout}
                 speed={800}
                 onSwiper={(s) => {
                   hSwiperRef.current = s;
