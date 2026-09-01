@@ -4,12 +4,12 @@
 # 서버에 반드시 git clone 된 디렉터리 필요 (예: /home/ec2-user/ignite)
 # PM2 앱 이름 ignite, main 브랜치 가정. 경로/브랜치는 env 에 맞게 수정.
 
-name: Deploy to EC2
+name: Deploy to EC2 (비활성 — Vercel로 이관됨)
 
+# 2026-09-01 Vercel 이관으로 자동 배포를 중단했다.
+# EC2로 롤백이 필요하면 Actions 탭에서 수동 실행(workflow_dispatch)한다.
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 concurrency:
   group: deploy-production

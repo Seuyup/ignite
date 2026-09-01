@@ -5,6 +5,15 @@ import { ADMIN_UPLOAD_MAX_BYTES } from "@/lib/admin-upload";
 import { verifyAdminToken } from "@/lib/admin-session";
 import { optimizeAdminUploadImage } from "@/lib/optimize-upload-image";
 
+/**
+ * [레거시] 서버 경유 업로드 → sharp 압축 → R2.
+ * Vercel Functions의 요청 본문 4.5MB 제한 때문에 큰 파일은 함수에 닿기도 전에
+ * FUNCTION_PAYLOAD_TOO_LARGE로 잘린다. 관리자 UI는 `/api/admin/upload/sign`
+ * 사전 서명 방식을 사용하며, 이 라우트는 호환용으로만 남겨둔다.
+ */
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
 function safeKeySegment(name: string): string {
   const base = name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120);
   return base || "image";

@@ -32,3 +32,25 @@ export async function parseAdminUploadResponse(
     };
   }
 }
+
+/** 업로드 오브젝트 공통 캐시 헤더 */
+export const ADMIN_UPLOAD_CACHE_CONTROL = "public, max-age=31536000, immutable";
+
+/** 업로드 허용 형식 — 사전 서명 발급(`/api/admin/upload/sign`)에서 검증한다. */
+export const ADMIN_UPLOAD_ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+  "image/svg+xml",
+] as const;
+
+export const ADMIN_UPLOAD_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+  "image/avif": "avif",
+  "image/svg+xml": "svg",
+};
