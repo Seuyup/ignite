@@ -152,16 +152,21 @@ Vercel이 도메인 검증 후 인증서를 자동 발급한다(보통 수 분).
 
 롤백 여지를 남기기 위해 **바로 삭제하지 않는다**. 트래픽이 완전히 넘어온 것을 확인한 뒤:
 
+- [x] **DNS 컷오버 완료 (2026-09-28)** — `@` A `216.198.79.1`(308 → www), `www` CNAME Vercel
+- [x] GitHub Actions EC2 배포 워크플로 삭제 (2026-09-28)
 - [ ] EC2 인스턴스 중지 → 이상 없으면 종료
 - [ ] **Elastic IP `3.35.114.6` 해제(Release)** — 인스턴스 종료 후 붙잡고 있으면 계속 과금된다
 - [ ] EBS 볼륨/스냅샷 정리
 - [ ] 보안 그룹 정리
 - [ ] MongoDB Atlas Network Access에서 EC2 IP 항목 제거
 - [ ] GitHub Secrets `EC2_HOST` / `EC2_USER` / `EC2_SSH_KEY` 삭제
-- [ ] `.github/workflows/deploy-ec2.yml` 파일 삭제 (롤백 필요 없다고 판단되면)
 - [ ] 레거시 업로드 라우트(`/api/admin/upload`)와 `sharp` 의존성 제거 검토
 
 ## 롤백
 
 DNS 레코드를 `@`/`www` A → `3.35.114.6`으로 되돌린다(TTL 600초면 10분 내 복구).
 EC2 인스턴스가 살아 있어야 하므로 위 정리 작업은 충분히 관찰한 뒤 진행한다.
+
+> 자동 배포 워크플로는 2026-09-28에 삭제했다. 롤백하려면 EC2에서 직접
+> `git pull && npm ci && npm run build && pm2 reload ignite` 를 돌린다.
+> 인스턴스를 종료했다면 롤백 경로도 함께 사라진다 — 정리 전에 확인한다.

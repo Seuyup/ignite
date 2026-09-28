@@ -62,7 +62,7 @@ R2_PUBLIC_BASE_URL=https://pub-xxxx.r2.dev
 ## 6-1. 화면에서 로딩을 줄이는 방법 (이 프로젝트)
 
 1. **업로드 시 줄이기** — 위 sharp 처리로 저장 용량·픽셀 수가 줄어듭니다. **이미 올라간 예전 파일**은 DB·R2 URL이 그대로이므로, 필요하면 관리자에서 **다시 업로드**하면 새 정책이 적용됩니다.
-2. **표시 시 줄이기** — 프로젝트 **대표 이미지** 등은 `R2_PUBLIC_BASE_URL` 아래 주소일 때 [next/image](https://nextjs.org/docs/app/api-reference/components/image)로 **WebP/AVIF·`sizes`에 맞는 해상도**를 내려받습니다. `next.config.ts`의 `images.remotePatterns`는 빌드 시점의 `R2_PUBLIC_BASE_URL` 호스트를 사용하므로, **EC2에서 `npm run build` 할 때** `.env.production`에 동일 값이 있어야 합니다.
+2. **표시 시 줄이기** — 프로젝트 **대표 이미지** 등은 `R2_PUBLIC_BASE_URL` 아래 주소일 때 [next/image](https://nextjs.org/docs/app/api-reference/components/image)로 **WebP/AVIF·`sizes`에 맞는 해상도**를 내려받습니다. `next.config.ts`의 `images.remotePatterns`는 빌드 시점의 `R2_PUBLIC_BASE_URL` 호스트를 사용하므로, **Vercel 환경 변수에 같은 값이 있어야 하고 값을 바꾸면 재배포해야** 합니다.
 3. **본문 HTML 안의 `<img>`** — Tiptap에 넣은 이미지는 그대로 `<img src="R2 URL">`로 렌더링됩니다. 용량을 줄이려면 **에디터에서 이미지를 다시 올리거나** URL을 바꾸는 방식이 필요합니다.
 
 ### Cloudflare만으로 할 수 있는 것
@@ -78,6 +78,6 @@ R2_PUBLIC_BASE_URL=https://pub-xxxx.r2.dev
 | 업로드는 되는데 이미지가 안 보임 | `R2_PUBLIC_BASE_URL`이 버킷의 공개 접근 방식과 일치하는지, 객체 경로가 브라우저에서 열리는지 |
 | 401 | 관리자 로그인 후 같은 브라우저에서 업로드하는지 (쿠키 전송) |
 | CORS | 같은 출처(`/api/admin/upload`)로 업로드하므로 일반적으로 추가 CORS 설정 불필요 |
-| 로컬만 되고 EC2(실서버)에서만 실패, 알림이 **「업로드 중 오류가 발생했습니다.」** | Nginx 기본 `client_max_body_size`가 **1MB**인 경우가 많아, 큰 이미지는 **413 HTML**을 돌려 JSON 파싱이 실패함. `server { ... }` 안에 `client_max_body_size 35m;` 이상 추가 후 `sudo nginx -t && sudo systemctl reload nginx` |
+| 로컬만 되고 운영에서만 실패 | 지금은 브라우저가 R2로 직접 PUT 하므로(사전 서명 업로드) 본문이 서버를 지나지 않습니다. 실패하면 R2 버킷 CORS를 먼저 봅니다 — `npm run r2:cors`. (EC2+Nginx 시절에는 `client_max_body_size` 1MB 기본값이 원인이었습니다) |
 
 자세한 최신 UI 이름은 [Cloudflare R2 문서](https://developers.cloudflare.com/r2/)를 참고하세요.
