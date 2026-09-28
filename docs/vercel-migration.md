@@ -118,6 +118,36 @@ Vercel이 도메인 검증 후 인증서를 자동 발급한다(보통 수 분).
 - [ ] OG 태그의 도메인이 `www.ignitearch.co.kr`인지
 - [ ] 네이버 지도 정상 로드
 
+## 5-1. 배포는 됐는데 데이터가 안 보일 때
+
+조회 함수는 실패를 삼키고 빈 배열을 돌려준다. 그래서 화면만 보면
+**"데이터가 없는 것"과 "DB에 못 붙은 것"이 똑같아 보인다.** 순서대로 확인한다.
+
+1. **관리자로 로그인**한 뒤 `/api/admin/health/db` 를 연다.
+   (관리자 로그인은 `ADMIN_SECRET` HMAC이라 DB가 죽어 있어도 통과한다)
+
+   ```jsonc
+   { "ok": true, "connectedDb": "ignite", "counts": { "list": 15, "menu": 8, … } }
+   ```
+
+   | 응답 | 원인과 조치 |
+   |---|---|
+   | `env.MONGODB_URI: false` | 변수가 없다. Vercel에 넣고 **재배포**한다 |
+   | `env.dbInUri: null` | URI 끝에 `/ignite` 가 없다. DB 이름이 없으면 `test` 에 붙어 **연결은 되는데 비어 있다** |
+   | `errorName: "MongoServerSelectionError"` | Atlas → Network Access 에 `0.0.0.0/0`, 클러스터 Paused 여부 |
+   | `Authentication failed` | 사용자/비밀번호. 비밀번호의 `@ : / ?` 는 URL 인코딩해야 한다 |
+   | `ok: true` 인데 `counts` 가 0 | 다른 클러스터를 보고 있다. 로컬과 같은 클러스터인지 확인 |
+
+2. **Vercel → 프로젝트 → Logs** 에서 `[db]` 로 시작하는 줄을 본다.
+   어느 함수에서 무슨 오류가 났는지 그대로 남는다.
+
+> **환경 변수는 배포 시점에 스냅샷된다.** 값을 추가·수정한 뒤에는 반드시 재배포해야
+> 반영된다. 이미 떠 있는 배포는 예전 값을 그대로 들고 있다.
+
+> 로컬 `.env.local` 은 표준 URI(`mongodb://` + 샤드 3개)를 쓸 수 있지만,
+> **Vercel에는 `mongodb+srv://` 를 넣는다.** Atlas가 클러스터를 옮기면
+> 샤드 호스트명이 바뀌어 표준 URI는 조용히 끊긴다.
+
 ## 6. AWS 정리 (컷오버 1~2주 후)
 
 롤백 여지를 남기기 위해 **바로 삭제하지 않는다**. 트래픽이 완전히 넘어온 것을 확인한 뒤:
