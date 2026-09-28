@@ -1,4 +1,5 @@
 import type { Project, ProjectDetail } from "@/lib/projects";
+import { logDbFailure } from "@/lib/db-log";
 import { connectDB } from "@/lib/mongodb";
 import { List as ProjectModel } from "@/lib/models/List";
 
@@ -34,7 +35,8 @@ export async function getProjectsForPublic(): Promise<Project[]> {
       .sort({ sortOrder: 1, createdAt: -1 })
       .lean();
     return docs.map(mapDoc);
-  } catch {
+  } catch (err) {
+    logDbFailure("project-queries.getProjectsForPublic", err);
     return [];
   }
 }
@@ -48,7 +50,8 @@ export async function getProjectsByMenuId(
       .sort({ sortOrder: 1, createdAt: -1 })
       .lean();
     return docs.map(mapDoc);
-  } catch {
+  } catch (err) {
+    logDbFailure("project-queries.getProjectsByMenuId", err);
     return [];
   }
 }
@@ -62,7 +65,8 @@ export async function getProjectDetailsByMenuId(
       .sort({ sortOrder: 1, createdAt: -1 })
       .lean();
     return docs.map(mapDocDetail);
-  } catch {
+  } catch (err) {
+    logDbFailure("project-queries.getProjectDetailsByMenuId", err);
     return [];
   }
 }
@@ -74,7 +78,8 @@ export async function getProjectBySlug(
     await connectDB();
     const doc = await ProjectModel.findOne({ slug, ...ACTIVE }).lean();
     if (doc) return mapDocDetail(doc);
-  } catch {
+  } catch (err) {
+    logDbFailure("project-queries.getProjectBySlug", err);
     /* fall through */
   }
   return null;
@@ -85,7 +90,8 @@ export async function getProjectSlugsForStaticParams(): Promise<string[]> {
     await connectDB();
     const docs = await ProjectModel.find(ACTIVE).select("slug").lean();
     return docs.map((d) => (d as DocLean).slug as string);
-  } catch {
+  } catch (err) {
+    logDbFailure("project-queries.getProjectSlugsForStaticParams", err);
     return [];
   }
 }
@@ -106,7 +112,8 @@ export async function getAdjacentProjects(
     const prev = idx > 0 ? mapDocDetail(docs[idx - 1]) : null;
     const next = idx < docs.length - 1 ? mapDocDetail(docs[idx + 1]) : null;
     return { prev, next };
-  } catch {
+  } catch (err) {
+    logDbFailure("project-queries.getAdjacentProjects", err);
     return { prev: null, next: null };
   }
 }

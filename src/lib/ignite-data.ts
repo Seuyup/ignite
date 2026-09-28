@@ -1,4 +1,5 @@
 import { connectDB } from "@/lib/mongodb";
+import { logDbFailure } from "@/lib/db-log";
 import { Menu as Ignite } from "@/lib/models/Menu";
 
 export const IGNITE_TYPE_STUDIO = "studio" as const;
@@ -66,7 +67,8 @@ export async function getMenuTree(): Promise<MenuItem[]> {
         children,
       };
     });
-  } catch {
+  } catch (err) {
+    logDbFailure("ignite-data.getMenuTree", err);
     return [];
   }
 }
@@ -115,7 +117,8 @@ export async function getProjectCategories(): Promise<MenuItem[]> {
       parent_id: parentId,
       children: [],
     }));
-  } catch {
+  } catch (err) {
+    logDbFailure("ignite-data.getProjectCategories", err);
     return [];
   }
 }
@@ -133,7 +136,8 @@ export async function getIgniteSeo(type: string): Promise<IgniteSeo> {
       description: (seo.description as string) || "",
       ogImage: (seo.ogImage as string) || "",
     };
-  } catch {
+  } catch (err) {
+    logDbFailure("ignite-data.getIgniteSeo", err);
     return { ...EMPTY_SEO };
   }
 }
@@ -161,7 +165,8 @@ export async function getIgniteSeoById(id: string): Promise<IgniteSeo> {
       description: (seo.description as string) || "",
       ogImage: (seo.ogImage as string) || "",
     };
-  } catch {
+  } catch (err) {
+    logDbFailure("ignite-data.getIgniteSeoById", err);
     return { ...EMPTY_SEO };
   }
 }
@@ -181,7 +186,8 @@ export async function getIgniteBody(type: string): Promise<string> {
     await connectDB();
     const doc = await Ignite.findOne({ type: type.toLowerCase() }).lean();
     return (doc as { body?: string } | null)?.body ?? "";
-  } catch {
+  } catch (err) {
+    logDbFailure("ignite-data.getIgniteBody", err);
     return "";
   }
 }
@@ -225,7 +231,8 @@ export async function getStudioBodies(): Promise<StudioBodies> {
       bodyTop: d?.bodyTop || d?.body || "",
       bodyBottom: d?.bodyBottom || "",
     };
-  } catch {
+  } catch (err) {
+    logDbFailure("ignite-data.getStudioBodies", err);
     return { bodyTop: "", bodyBottom: "" };
   }
 }
@@ -263,7 +270,8 @@ export async function getStudioLocation(): Promise<StudioLocation> {
       };
     }
     return null;
-  } catch {
+  } catch (err) {
+    logDbFailure("ignite-data.getStudioLocation", err);
     return null;
   }
 }
@@ -343,7 +351,8 @@ async function getHomeContentsDoc(): Promise<HomeContents> {
     const doc = await Ignite.findOne({ type: IGNITE_TYPE_HOME }).lean();
     if (!doc) return { ...EMPTY_HOME_CONTENTS };
     return parseHomeContents((doc as { contents?: unknown }).contents);
-  } catch {
+  } catch (err) {
+    logDbFailure("ignite-data.getStudioForAdmin", err);
     return { ...EMPTY_HOME_CONTENTS };
   }
 }
@@ -436,7 +445,8 @@ export async function getIndividualPages(): Promise<IndividualPage[]> {
         ogImage: (d.seo?.ogImage as string) || "",
       },
     }));
-  } catch {
+  } catch (err) {
+    logDbFailure("ignite-data.getIndividualPages", err);
     return [];
   }
 }
@@ -466,7 +476,8 @@ export async function getIndividualPageByType(
         ogImage: (d.seo?.ogImage as string) || "",
       },
     };
-  } catch {
+  } catch (err) {
+    logDbFailure("ignite-data.getIndividualPageByType", err);
     return null;
   }
 }
