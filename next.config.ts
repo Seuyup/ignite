@@ -34,14 +34,6 @@ const nextConfig: NextConfig = {
     remotePatterns: r2RemotePatterns(),
     formats: ["image/avif", "image/webp"],
   },
-  /**
-   * `isomorphic-dompurify` 는 서버에서 **jsdom** 을 끌어온다.
-   * 번들러가 jsdom 을 함께 묶으면 동적 require 가 깨져 서버리스에서 터진다.
-   * (2026-09-28 Vercel 이관 후 이 함수를 쓰는 `/studio` · `/contact` ·
-   *  `/p/[slug]` 세 라우트만 500. 로컬에서는 재현되지 않았다)
-   * 외부 패키지로 선언해 번들에서 빼고 node_modules 로 들고 간다.
-   */
-  serverExternalPackages: ["isomorphic-dompurify", "jsdom"],
 };
 
 export default nextConfig;
