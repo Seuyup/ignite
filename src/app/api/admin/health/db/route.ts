@@ -42,10 +42,28 @@ export async function GET() {
     vercelRegion: process.env.VERCEL_REGION ?? null,
   };
 
+  // 런타임 Node 버전 — jsdom(29) 은 ^20.19 || ^22.13 || >=24 를 요구한다.
+  // 이보다 낮으면 `sanitizeRichHtml` 을 쓰는 라우트가 import 단계에서 터진다.
+  const runtimeNode = process.version;
+  let sanitize: { ok: boolean; error?: string };
+  try {
+    const mod = await import("@/lib/sanitize-html");
+    const out = mod.sanitizeRichHtml("<p onclick=\"x\">ok</p>");
+    sanitize = { ok: out.includes("ok") && !out.includes("onclick") };
+  } catch (e) {
+    const err = e as { name?: string; message?: string };
+    sanitize = {
+      ok: false,
+      error: `${err?.name ?? "Error"}: ${(err?.message ?? String(e)).slice(0, 300)}`,
+    };
+  }
+
   if (!uri) {
     return NextResponse.json({
       ok: false,
       env,
+      runtimeNode,
+      sanitize,
       reason: "MONGODB_URI 환경 변수가 없습니다. Vercel → Settings → Environment Variables 에 넣고 재배포하세요.",
     });
   }
@@ -64,6 +82,8 @@ export async function GET() {
     return NextResponse.json({
       ok: true,
       env,
+      runtimeNode,
+      sanitize,
       connectedDb: mongoose.connection.name,
       readyState: mongoose.connection.readyState,
       tookMs: Date.now() - started,
@@ -75,6 +95,8 @@ export async function GET() {
     return NextResponse.json({
       ok: false,
       env,
+      runtimeNode,
+      sanitize,
       tookMs: Date.now() - started,
       errorName: e?.name ?? "Error",
       // 비밀번호가 섞여 들어가지 않도록 자격 증명 부분을 지운다
